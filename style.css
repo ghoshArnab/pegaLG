@@ -1,0 +1,36 @@
+body {
+    margin: 0 auto;
+    max-width: 90%;
+}
+
+.slider-wrapper {
+    border: 1px solid #ccc;
+}
+
+.carousel-cell {
+    margin-right: 10px;
+    margin-bottom: 10px;
+    background: #8C8;
+    border-radius: 5px;
+    counter-increment: carousel-cell;
+    text-align: center;
+    line-height: 60px;
+    font-size: 20px;
+    color: white;
+}
+
+.content {
+    width: 100%;
+}
+
+.carousel-cell.is-nav-selected {
+    background: #ED2;
+}
+
+.flickity-viewport {
+    transition: height 0.2s;
+}
+
+.header.carousel-cell {
+    white-space: nowrap;
+}

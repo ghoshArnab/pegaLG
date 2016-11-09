@@ -3,44 +3,7 @@
 
 <head>
     <title>Content Slider</title>
-    <style type="text/css">
-    body {
-        margin: 0 auto;
-        max-width: 80%;
-    }
-    
-    .slider-wrapper {
-        border: 1px solid;
-    }
-    
-    .carousel-cell {
-        margin-right: 10px;
-        margin-bottom: 10px;
-        background: #8C8;
-        border-radius: 5px;
-        counter-increment: carousel-cell;
-        text-align: center;
-        line-height: 60px;
-        font-size: 20px;
-        color: white;
-    }
-    
-    .content {
-        width: 100%;
-    }
-    
-    .carousel-cell.is-nav-selected {
-        background: #ED2;
-    }
-    
-    .flickity-viewport {
-        transition: height 0.2s;
-    }
-    
-    .header.carousel-cell {
-        white-space: nowrap;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/flickity@2.0/dist/flickity.css" media="screen">
 </head>
 
@@ -263,7 +226,6 @@
     </div>
 </body>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<!-- <script src="https://unpkg.com/flickity@2.0/dist/flickity.pkgd.min.js"></script> -->
 <script type="text/javascript" src="flickity.js"></script>
 <!-- <script src="https://unpkg.com/flickity@2.0/dist/flickity.pkgd.js"></script> -->
 <script type="text/javascript">
@@ -284,16 +246,7 @@ $('.carousel-main').flickity({
     pageDots: false,
     percentPosition: false
 // });*/
-
-
-$(".header-wrapper").on("mousedown touchstart", function(event, slick, direction) {
-    // debugger;
-    event.cancelBubble = true;
-    event.stopImmediatePropagation();
-    event.stopPropagation();
-    event.preventDefault();
-});
-$(".content-wrapper").on("mousedown touchstart", function(event, slick, direction) {
+$(".content-wrapper,.header-wrapper").on("mousedown touchstart", function(event, slick, direction) {
     // debugger;
     event.cancelBubble = true;
     event.stopImmediatePropagation();
