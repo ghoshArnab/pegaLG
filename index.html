@@ -245,12 +245,8 @@ $('.carousel-main').flickity({
     pageDots: false,
     percentPosition: false
 // });*/
-$(".content-wrapper,.header-wrapper").on("mousedown touchstart", function(event, slick, direction) {
-    // debugger;
-    event.cancelBubble = true;
-    event.stopImmediatePropagation();
-    event.stopPropagation();
-    event.preventDefault();
+$(".content-wrapper,.header-wrapper").on("mousedown touchstart", function(e) {
+    e.stopPropagation();
 });
 </script>
 
