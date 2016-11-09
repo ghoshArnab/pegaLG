@@ -286,14 +286,14 @@ $('.carousel-main').flickity({
 // });*/
 
 
-$(".header-wrapper").on("mousedown", function(event, slick, direction) {
+$(".header-wrapper").on("mousedown touchstart", function(event, slick, direction) {
     // debugger;
     event.cancelBubble = true;
     event.stopImmediatePropagation();
     event.stopPropagation();
     event.preventDefault();
 });
-$(".content-wrapper").on("mousedown", function(event, slick, direction) {
+$(".content-wrapper").on("mousedown touchstart", function(event, slick, direction) {
     // debugger;
     event.cancelBubble = true;
     event.stopImmediatePropagation();
