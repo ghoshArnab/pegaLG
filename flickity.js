@@ -269,7 +269,7 @@ window.EvEmitter();
         return ary;
     };
     // ----- removeFrom ----- //
-    
+
     // ----- getQueryElement ----- //
     // use element as selector string
     utils.getQueryElement = function(elem) {
@@ -1186,7 +1186,7 @@ window.EvEmitter();
         // try to get parent cell elem
         return this.getCell(elem.parentNode);
     };
- 
+
     // -------------------------- events -------------------------- //
     proto.uiChange = function() {
         this.emitEvent("uiChange");
@@ -1333,7 +1333,8 @@ window.EvEmitter();
     // trigger handler methods for events
     proto.handleEvent = function(event) {
         var method = "on" + event.type;
-        if (this[method]) {            this[method](event);
+        if (this[method]) {
+            this[method](event);
         }
     };
     // returns the touch that we're keeping track of
