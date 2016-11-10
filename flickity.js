@@ -17,26 +17,9 @@
 
 /* jshint unused: true, undef: true, strict: true */
 
-(function(global, factory) {
-    // universal module definition
-    /* jshint strict: false */
-    /* globals define, module, window */
-    if (typeof define == 'function' && define.amd) {
-        // AMD - RequireJS
-        define('ev-emitter/ev-emitter', factory);
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS - Browserify, Webpack
-        module.exports = factory();
-    } else {
-        // Browser globals
-        global.EvEmitter = factory();
-    }
-
-}(typeof window != 'undefined' ? window : this, function() {
 
 
-
-    function EvEmitter() {}
+window.EvEmitter = (function() {
 
     var proto = EvEmitter.prototype;
 
@@ -118,7 +101,8 @@
 
     return EvEmitter;
 
-}));
+});
+window.EvEmitter();
 
 /*!
  * getSize v2.0.2
@@ -336,23 +320,8 @@
  * MIT license
  */
 
-/*jshint browser: true, strict: true, undef: true, unused: true */
-( function( window, factory ) {
-  /*global define: false, module: false */
-  'use strict';
-  // universal module definition
-  if ( typeof define == 'function' && define.amd ) {
-    // AMD
-    define( 'desandro-matches-selector/matches-selector',factory );
-  } else if ( typeof module == 'object' && module.exports ) {
-    // CommonJS
-    module.exports = factory();
-  } else {
-    // browser global
-    window.matchesSelector = factory();
-  }
+window.matchesSelector = (function(){
 
-}( window, function factory() {
     'use strict';
 
     var matchesMethod = (function() {
@@ -381,8 +350,8 @@
         return elem[matchesMethod](selector);
     };
 
-}));
-
+});
+window.matchesSelector();
 /**
  * Fizzy UI utils v2.0.3
  * MIT license
