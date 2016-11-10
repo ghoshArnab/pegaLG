@@ -536,14 +536,7 @@ window.matchesSelector();
 
     // ----- htmlInit ----- //
 
-    // http://jamesroberts.name/blog/2010/02/22/string-functions-for-javascript-trim-to-camel-case-to-dashed-and-to-underscore/
-    utils.toDashed = function(str) {
-        return str.replace(/(.)([A-Z])/g, function(match, $1, $2) {
-            return $1 + '-' + $2;
-        }).toLowerCase();
-    };
-
-    var console = window.console;
+   
     /**
      * allow user to initialize classes via [data-namespace] or .js-namespace class
      * htmlInit( Widget, 'widgetName' )
@@ -551,10 +544,10 @@ window.matchesSelector();
      */
     utils.htmlInit = function(WidgetClass, namespace) {
         utils.docReady(function() {
-            var dashedNamespace = utils.toDashed(namespace);
-            var dataAttr = 'data-' + dashedNamespace;
+            //var dashedNamespace = utils.toDashed(namespace);
+            var dataAttr = 'data-' + namespace;
             var dataAttrElems = document.querySelectorAll('[' + dataAttr + ']');
-            var jsDashElems = document.querySelectorAll('.js-' + dashedNamespace);
+            var jsDashElems = document.querySelectorAll('.js-' + namespace);
             var elems = utils.makeArray(dataAttrElems)
                 .concat(utils.makeArray(jsDashElems));
             var dataOptionsAttr = dataAttr + '-options';
