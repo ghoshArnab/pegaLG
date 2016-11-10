@@ -363,27 +363,10 @@ window.matchesSelector();
     // universal module definition
     /*jshint strict: false */
     /*globals define, module, require */
-
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('fizzy-ui-utils/utils', [
-            'desandro-matches-selector/matches-selector'
-        ], function(matchesSelector) {
-            return factory(window, matchesSelector);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('desandro-matches-selector')
-        );
-    } else {
-        // browser global
-        window.fizzyUIUtils = factory(
+window.fizzyUIUtils = factory(
             window,
             window.matchesSelector
         );
-    }
 
 }(window, function factory(window, matchesSelector) {
 
@@ -589,28 +572,12 @@ window.matchesSelector();
 // Flickity.Cell
 (function(window, factory) {
     // universal module definition
-    /* jshint strict: false */
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('flickity/js/cell', [
-            'get-size/get-size'
-        ], function(getSize) {
-            return factory(window, getSize);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('get-size')
-        );
-    } else {
-        // browser global
-        window.Flickity = window.Flickity || {};
+ 
         window.Flickity.Cell = factory(
             window,
             window.getSize
         );
-    }
+    
 
 }(window, function factory(window, getSize) {
 
@@ -681,17 +648,9 @@ window.matchesSelector();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('flickity/js/slide', factory);
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory();
-    } else {
-        // browser global
-        window.Flickity = window.Flickity || {};
+  
         window.Flickity.Slide = factory();
-    }
+    
 
 }(window, function factory() {
     'use strict';
@@ -758,27 +717,12 @@ window.matchesSelector();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('flickity/js/animate', [
-            'fizzy-ui-utils/utils'
-        ], function(utils) {
-            return factory(window, utils);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('fizzy-ui-utils')
-        );
-    } else {
-        // browser global
-        window.Flickity = window.Flickity || {};
+    
         window.Flickity.animatePrototype = factory(
             window,
             window.fizzyUIUtils
         );
-    }
+    
 
 }(window, function factory(window, utils) {
 
@@ -1836,28 +1780,13 @@ window.matchesSelector();
 
 (function(window, factory) {
     // universal module definition
-    /* jshint strict: false */
-    /*global define, module, require */
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('unipointer/unipointer', [
-            'ev-emitter/ev-emitter'
-        ], function(EvEmitter) {
-            return factory(window, EvEmitter);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('ev-emitter')
-        );
-    } else {
+  
         // browser global
         window.Unipointer = factory(
             window,
             window.EvEmitter
         );
-    }
+    
 
 }(window, function factory(window, EvEmitter) {
 
@@ -2142,28 +2071,13 @@ window.matchesSelector();
 (function(window, factory) {
     // universal module definition
     /*jshint strict: false */
-    /*globals define, module, require */
-
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('unidragger/unidragger', [
-            'unipointer/unipointer'
-        ], function(Unipointer) {
-            return factory(window, Unipointer);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('unipointer')
-        );
-    } else {
+   
         // browser global
         window.Unidragger = factory(
             window,
             window.Unipointer
         );
-    }
+    
 
 }(window, function factory(window, Unipointer) {
 
@@ -2819,26 +2733,12 @@ window.matchesSelector();
     /*jshint strict: false*/
     /*globals define, module, require */
 
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('tap-listener/tap-listener', [
-            'unipointer/unipointer'
-        ], function(Unipointer) {
-            return factory(window, Unipointer);
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            window,
-            require('unipointer')
-        );
-    } else {
         // browser global
         window.TapListener = factory(
             window,
             window.Unipointer
         );
-    }
+    
 
 }(window, function factory(window, Unipointer) {
 
@@ -3193,25 +3093,12 @@ window.matchesSelector();
     // universal module definition
     /*jshint strict: false */
     /*globals define, module, require */
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('flickity-as-nav-for/as-nav-for', [
-            'flickity/js/index',
-            'fizzy-ui-utils/utils'
-        ], factory);
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory(
-            require('flickity'),
-            require('fizzy-ui-utils')
-        );
-    } else {
-        // browser global
+    
         window.Flickity = factory(
             window.Flickity,
             window.fizzyUIUtils
         );
-    }
+    
 
 }(window, function factory(Flickity, utils) {
 
