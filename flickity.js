@@ -108,13 +108,15 @@ window.EvEmitter();
         var isValid = value.indexOf("%") == -1 && !isNaN(num);
         return isValid && num;
     }
+
     function noop() {}
     var logError = typeof console == "undefined" ? noop : function(message) {
         console.error(message);
     };
     // -------------------------- measurements -------------------------- //
-    var measurements = [ "paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "marginLeft", "marginRight", "marginTop", "marginBottom", "borderLeftWidth", "borderRightWidth", "borderTopWidth", "borderBottomWidth" ];
+    var measurements = ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "marginLeft", "marginRight", "marginTop", "marginBottom", "borderLeftWidth", "borderRightWidth", "borderTopWidth", "borderBottomWidth"];
     var measurementsLength = measurements.length;
+
     function getZeroSize() {
         var size = {
             width: 0,
@@ -211,13 +213,13 @@ window.EvEmitter();
         // overwrite width and height if we can get it from style
         var styleWidth = getStyleSize(style.width);
         if (styleWidth !== false) {
-            size.width = styleWidth + (// add padding and border unless it's already including it
-            isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth);
+            size.width = styleWidth + ( // add padding and border unless it's already including it
+                isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth);
         }
         var styleHeight = getStyleSize(style.height);
         if (styleHeight !== false) {
-            size.height = styleHeight + (// add padding and border unless it's already including it
-            isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight);
+            size.height = styleHeight + ( // add padding and border unless it's already including it
+                isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight);
         }
         size.innerWidth = size.width - (paddingWidth + borderWidth);
         size.innerHeight = size.height - (paddingHeight + borderHeight);
@@ -248,10 +250,6 @@ window.EvEmitter();
         }
         return a;
     };
-    // ----- modulo ----- //
-    utils.modulo = function(num, div) {
-        return (num % div + div) % div;
-    };
     // ----- makeArray ----- //
     // turn element or nodeList into an array
     utils.makeArray = function(obj) {
@@ -271,22 +269,11 @@ window.EvEmitter();
         return ary;
     };
     // ----- removeFrom ----- //
-    utils.removeFrom = function(ary, obj) {
-        var index = ary.indexOf(obj);
-        if (index != -1) {
-            ary.splice(index, 1);
-        }
-    };
-    // ----- getParent ----- //
-    utils.getParent = function(elem, selector) {
-        while (elem != document.body) {
-            elem = elem.parentNode;
-            return elem;
-        }
-    };
+    
     // ----- getQueryElement ----- //
     // use element as selector string
     utils.getQueryElement = function(elem) {
+
         if (typeof elem == "string") {
             return document.querySelector(elem);
         }
@@ -326,24 +313,6 @@ window.EvEmitter();
             }
         });
         return ffElems;
-    };
-    // ----- debounceMethod ----- //
-    utils.debounceMethod = function(_class, methodName, threshold) {
-        // original method
-        var method = _class.prototype[methodName];
-        var timeoutName = methodName + "Timeout";
-        _class.prototype[methodName] = function() {
-            var timeout = this[timeoutName];
-            if (timeout) {
-                clearTimeout(timeout);
-            }
-            var args = arguments;
-            var _this = this;
-            this[timeoutName] = setTimeout(function() {
-                method.apply(_this, args);
-                delete _this[timeoutName];
-            }, threshold || 100);
-        };
     };
     // ----- htmlInit ----- //
     /**
@@ -438,6 +407,7 @@ window.EvEmitter();
     window.Flickity.Slide = factory();
 })(window, function factory() {
     "use strict";
+
     function Slide(parent) {
         this.parent = parent;
         this.isOriginLeft = parent.originSide == "left";
@@ -543,7 +513,7 @@ window.EvEmitter();
         var x = this.x;
         // wrap position around
         if (this.options.wrapAround && this.cells.length > 1) {
-            x = utils.modulo(x, this.slideableWidth);
+            x = (x % this.slideableWidth + this.slideableWidth) % this.slideableWidth;
             x = x - this.slideableWidth;
             this.shiftWrapCells(x);
         }
@@ -559,7 +529,7 @@ window.EvEmitter();
         if (firstSlide) {
             var positionX = -this.x - firstSlide.target;
             var progress = positionX / this.slidesWidth;
-            this.dispatchEvent("scroll", null, [ progress, positionX ]);
+            this.dispatchEvent("scroll", null, [progress, positionX]);
         }
     };
     proto.positionSliderAtSelected = function() {
@@ -656,24 +626,16 @@ window.EvEmitter();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == "function" && define.amd) {
-        // AMD
-        define("flickity/js/flickity", [ "ev-emitter/ev-emitter", "get-size/get-size", "fizzy-ui-utils/utils", "./cell", "./slide", "./animate" ], function(EvEmitter, getSize, utils, Cell, Slide, animatePrototype) {
-            return factory(window, EvEmitter, getSize, utils, Cell, Slide, animatePrototype);
-        });
-    } else if (typeof module == "object" && module.exports) {
-        // CommonJS
-        module.exports = factory(window, require("ev-emitter"), require("get-size"), require("fizzy-ui-utils"), require("./cell"), require("./slide"), require("./animate"));
-    } else {
-        // browser global
-        var _Flickity = window.Flickity;
-        window.Flickity = factory(window, window.EvEmitter, window.getSize, window.fizzyUIUtils, _Flickity.Cell, _Flickity.Slide, _Flickity.animatePrototype);
-    }
+
+    var _Flickity = window.Flickity;
+    window.Flickity = factory(window, window.EvEmitter, window.getSize, window.fizzyUIUtils, _Flickity.Cell, _Flickity.Slide, _Flickity.animatePrototype);
+
 })(window, function factory(window, EvEmitter, getSize, utils, Cell, Slide, animatePrototype) {
     // vars
     var jQuery = window.jQuery;
     var getComputedStyle = window.getComputedStyle;
     var console = window.console;
+
     function moveElements(elems, toElem) {
         elems = utils.makeArray(elems);
         while (elems.length) {
@@ -685,14 +647,9 @@ window.EvEmitter();
     var GUID = 0;
     // internal store of all Flickity intances
     var instances = {};
+
     function Flickity(element, options) {
         var queryElement = utils.getQueryElement(element);
-        if (!queryElement) {
-            if (console) {
-                console.error("Bad element for Flickity: " + (queryElement || element));
-            }
-            return;
-        }
         this.element = queryElement;
         // do not initialize twice on same element
         if (this.element.flickityGUID) {
@@ -751,17 +708,14 @@ window.EvEmitter();
         this.viewport = document.createElement("div");
         this.viewport.className = "flickity-viewport";
         this._createSlider();
-        if (this.options.resize || this.options.watchCSS) {
+        if (this.options.resize) {
             window.addEventListener("resize", this);
         }
         Flickity.createMethods.forEach(function(method) {
             this[method]();
         }, this);
-        if (this.options.watchCSS) {
-            this.watchCSS();
-        } else {
-            this.activate();
-        }
+        this.activate();
+
     };
     /**
      * set options
@@ -1050,7 +1004,7 @@ window.EvEmitter();
      * @param {Array} args - extra arguments
      */
     proto.dispatchEvent = function(type, event, args) {
-        var emitArgs = event ? [ event ].concat(args) : args;
+        var emitArgs = event ? [event].concat(args) : args;
         this.emitEvent(type, emitArgs);
         if (jQuery && this.$element) {
             // default trigger with type if no event
@@ -1078,7 +1032,7 @@ window.EvEmitter();
         index = parseInt(index, 10);
         this._wrapSelect(index);
         if (this.options.wrapAround || isWrap) {
-            index = utils.modulo(index, this.slides.length);
+            index = (index % this.slides.length + this.slides.length) % this.slides.length;
         }
         // bail if invalid index
         if (!this.slides[index]) {
@@ -1105,7 +1059,7 @@ window.EvEmitter();
         if (!isWrapping) {
             return index;
         }
-        var wrapIndex = utils.modulo(index, len);
+        var wrapIndex = (index % len + len) % len;
         // go to shortest
         var delta = Math.abs(wrapIndex - this.selectedIndex);
         var backWrapDelta = Math.abs(wrapIndex + len - this.selectedIndex);
@@ -1230,47 +1184,20 @@ window.EvEmitter();
             return cell;
         }
         // try to get parent cell elem
-        elem = utils.getParent(elem, ".flickity-slider > *");
-        return this.getCell(elem);
+        return this.getCell(elem.parentNode);
     };
-    /**
-     * get cells adjacent to a slide
-     * @param {Integer} adjCount - number of adjacent slides
-     * @param {Integer} index - index of slide to start
-     * @returns {Array} cells - array of Flickity.Cells
-     */
-    proto.getAdjacentCellElements = function(adjCount, index) {
-        if (!adjCount) {
-            return this.selectedSlide.getCellElements();
-        }
-        index = index === undefined ? this.selectedIndex : index;
-        var len = this.slides.length;
-        if (1 + adjCount * 2 >= len) {
-            return this.getCellElements();
-        }
-        var cellElems = [];
-        for (var i = index - adjCount; i <= index + adjCount; i++) {
-            var slideIndex = this.options.wrapAround ? utils.modulo(i, len) : i;
-            var slide = this.slides[slideIndex];
-            if (slide) {
-                cellElems = cellElems.concat(slide.getCellElements());
-            }
-        }
-        return cellElems;
-    };
+ 
     // -------------------------- events -------------------------- //
     proto.uiChange = function() {
         this.emitEvent("uiChange");
     };
     proto.childUIPointerDown = function(event) {
-        this.emitEvent("childUIPointerDown", [ event ]);
+        this.emitEvent("childUIPointerDown", [event]);
     };
     // ----- resize ----- //
     proto.onresize = function() {
-        this.watchCSS();
         this.resize();
     };
-    utils.debounceMethod(Flickity, "onresize", 150);
     proto.resize = function() {
         if (!this.isActive) {
             return;
@@ -1278,7 +1205,7 @@ window.EvEmitter();
         this.getSize();
         // wrap values
         if (this.options.wrapAround) {
-            this.x = utils.modulo(this.x, this.slideableWidth);
+            this.x = (this.x % this.slideableWidth + this.slideableWidth) % this.slideableWidth;
         }
         this.positionCells();
         this._getWrapShiftCells();
@@ -1288,20 +1215,6 @@ window.EvEmitter();
         // TODO: position can be lost between groups of various numbers
         var selectedElement = this.selectedElements && this.selectedElements[0];
         this.selectCell(selectedElement, false, true);
-    };
-    // watches the :after property, activates/deactivates
-    proto.watchCSS = function() {
-        var watchOption = this.options.watchCSS;
-        if (!watchOption) {
-            return;
-        }
-        var afterContent = getComputedStyle(this.element, ":after").content;
-        // activate if :after { content: 'flickity' }
-        if (afterContent.indexOf("flickity") != -1) {
-            this.activate();
-        } else {
-            this.deactivate();
-        }
     };
     // ----- keydown ----- //
     // go previous/next if left/right keys pressed
@@ -1387,6 +1300,7 @@ window.EvEmitter();
     window.Unipointer = factory(window, window.EvEmitter);
 })(window, function factory(window, EvEmitter) {
     function noop() {}
+
     function Unipointer() {}
     // inherit EvEmitter
     var proto = Unipointer.prototype = Object.create(EvEmitter.prototype);
@@ -1419,8 +1333,7 @@ window.EvEmitter();
     // trigger handler methods for events
     proto.handleEvent = function(event) {
         var method = "on" + event.type;
-        if (this[method]) {
-            this[method](event);
+        if (this[method]) {            this[method](event);
         }
     };
     // returns the touch that we're keeping track of
@@ -1460,19 +1373,19 @@ window.EvEmitter();
         this.isPointerDown = true;
         // save pointer identifier to match up touch events
         this.pointerIdentifier = pointer.pointerId !== undefined ? // pointerId for pointer events, touch.indentifier for touch events
-        pointer.pointerId : pointer.identifier;
+            pointer.pointerId : pointer.identifier;
         this.pointerDown(event, pointer);
     };
     proto.pointerDown = function(event, pointer) {
         this._bindPostStartEvents(event);
-        this.emitEvent("pointerDown", [ event, pointer ]);
+        this.emitEvent("pointerDown", [event, pointer]);
     };
     // hash of events to be bound after start event
     var postStartEvents = {
-        mousedown: [ "mousemove", "mouseup" ],
-        touchstart: [ "touchmove", "touchend", "touchcancel" ],
-        pointerdown: [ "pointermove", "pointerup", "pointercancel" ],
-        MSPointerDown: [ "MSPointerMove", "MSPointerUp", "MSPointerCancel" ]
+        mousedown: ["mousemove", "mouseup"],
+        touchstart: ["touchmove", "touchend", "touchcancel"],
+        pointerdown: ["pointermove", "pointerup", "pointercancel"],
+        MSPointerDown: ["MSPointerMove", "MSPointerUp", "MSPointerCancel"]
     };
     proto._bindPostStartEvents = function(event) {
         if (!event) {
@@ -1523,7 +1436,7 @@ window.EvEmitter();
     };
     // public
     proto.pointerMove = function(event, pointer) {
-        this.emitEvent("pointerMove", [ event, pointer ]);
+        this.emitEvent("pointerMove", [event, pointer]);
     };
     // ----- end event ----- //
     proto.onmouseup = function(event) {
@@ -1552,7 +1465,7 @@ window.EvEmitter();
     };
     // public
     proto.pointerUp = function(event, pointer) {
-        this.emitEvent("pointerUp", [ event, pointer ]);
+        this.emitEvent("pointerUp", [event, pointer]);
     };
     // ----- pointer done ----- //
     // triggered on pointer up & pointer cancel
@@ -1589,7 +1502,7 @@ window.EvEmitter();
     };
     // public
     proto.pointerCancel = function(event, pointer) {
-        this.emitEvent("pointerCancel", [ event, pointer ]);
+        this.emitEvent("pointerCancel", [event, pointer]);
     };
     // -----  ----- //
     // utility function for getting x/y coords from event
@@ -1682,7 +1595,7 @@ window.EvEmitter();
         }
         // bind move and end events
         this._bindPostStartEvents(event);
-        this.emitEvent("pointerDown", [ event, pointer ]);
+        this.emitEvent("pointerDown", [event, pointer]);
     };
     // base pointer down logic
     proto._dragPointerDown = function(event, pointer) {
@@ -1706,7 +1619,7 @@ window.EvEmitter();
      */
     proto.pointerMove = function(event, pointer) {
         var moveVector = this._dragPointerMove(event, pointer);
-        this.emitEvent("pointerMove", [ event, pointer, moveVector ]);
+        this.emitEvent("pointerMove", [event, pointer, moveVector]);
         this._dragMove(event, pointer, moveVector);
     };
     // base pointer move logic
@@ -1733,7 +1646,7 @@ window.EvEmitter();
      * @param {Event or Touch} pointer
      */
     proto.pointerUp = function(event, pointer) {
-        this.emitEvent("pointerUp", [ event, pointer ]);
+        this.emitEvent("pointerUp", [event, pointer]);
         this._dragPointerUp(event, pointer);
     };
     proto._dragPointerUp = function(event, pointer) {
@@ -1754,7 +1667,7 @@ window.EvEmitter();
         this.dragStart(event, pointer);
     };
     proto.dragStart = function(event, pointer) {
-        this.emitEvent("dragStart", [ event, pointer ]);
+        this.emitEvent("dragStart", [event, pointer]);
     };
     // dragMove
     proto._dragMove = function(event, pointer, moveVector) {
@@ -1766,7 +1679,7 @@ window.EvEmitter();
     };
     proto.dragMove = function(event, pointer, moveVector) {
         event.preventDefault();
-        this.emitEvent("dragMove", [ event, pointer, moveVector ]);
+        this.emitEvent("dragMove", [event, pointer, moveVector]);
     };
     // dragEnd
     proto._dragEnd = function(event, pointer) {
@@ -1779,7 +1692,7 @@ window.EvEmitter();
         this.dragEnd(event, pointer);
     };
     proto.dragEnd = function(event, pointer) {
-        this.emitEvent("dragEnd", [ event, pointer ]);
+        this.emitEvent("dragEnd", [event, pointer]);
     };
     // ----- onclick ----- //
     // handle all clicks and prevent clicks when dragging
@@ -1811,7 +1724,7 @@ window.EvEmitter();
         }
     };
     proto.staticClick = function(event, pointer) {
-        this.emitEvent("staticClick", [ event, pointer ]);
+        this.emitEvent("staticClick", [event, pointer]);
     };
     // ----- utils ----- //
     Unidragger.getPointerPoint = Unipointer.getPointerPoint;
@@ -1823,18 +1736,8 @@ window.EvEmitter();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == "function" && define.amd) {
-        // AMD
-        define("flickity/js/drag", [ "./flickity", "unidragger/unidragger", "fizzy-ui-utils/utils" ], function(Flickity, Unidragger, utils) {
-            return factory(window, Flickity, Unidragger, utils);
-        });
-    } else if (typeof module == "object" && module.exports) {
-        // CommonJS
-        module.exports = factory(window, require("./flickity"), require("unidragger"), require("fizzy-ui-utils"));
-    } else {
-        // browser global
-        window.Flickity = factory(window, window.Flickity, window.Unidragger, window.fizzyUIUtils);
-    }
+
+    window.Flickity = factory(window, window.Flickity, window.Unidragger, window.fizzyUIUtils);
 })(window, function factory(window, Flickity, Unidragger, utils) {
     // ----- defaults ----- //
     utils.extend(Flickity.defaults, {
@@ -1866,7 +1769,7 @@ window.EvEmitter();
             return;
         }
         this.element.classList.add("is-draggable");
-        this.handles = [ this.viewport ];
+        this.handles = [this.viewport];
         this.bindHandles();
         this.isDragBound = true;
     };
@@ -1914,7 +1817,7 @@ window.EvEmitter();
         // kludge to blur focused inputs in dragger
         var focused = document.activeElement;
         if (focused && focused.blur && focused != this.element && // do not blur body for IE9 & 10, #117
-        focused != document.body) {
+            focused != document.body) {
             focused.blur();
         }
         this.pointerDownFocus(event);
@@ -1926,7 +1829,7 @@ window.EvEmitter();
         // track scrolling
         this.pointerDownScroll = getScrollPosition();
         window.addEventListener("scroll", this);
-        this.dispatchEvent("pointerDown", event, [ pointer ]);
+        this.dispatchEvent("pointerDown", event, [pointer]);
     };
     var touchStartEvents = {
         touchstart: true,
@@ -1962,7 +1865,7 @@ window.EvEmitter();
     proto.pointerUp = function(event, pointer) {
         delete this.isTouchScrolling;
         this.viewport.classList.remove("is-pointer-down");
-        this.dispatchEvent("pointerUp", event, [ pointer ]);
+        this.dispatchEvent("pointerUp", event, [pointer]);
         this._dragPointerUp(event, pointer);
     };
     proto.pointerDone = function() {
@@ -1974,11 +1877,11 @@ window.EvEmitter();
         this.dragStartPosition = this.x;
         this.startAnimation();
         window.removeEventListener("scroll", this);
-        this.dispatchEvent("dragStart", event, [ pointer ]);
+        this.dispatchEvent("dragStart", event, [pointer]);
     };
     proto.pointerMove = function(event, pointer) {
         var moveVector = this._dragPointerMove(event, pointer);
-        this.dispatchEvent("pointerMove", event, [ pointer, moveVector ]);
+        this.dispatchEvent("pointerMove", event, [pointer, moveVector]);
         this._dragMove(event, pointer, moveVector);
     };
     proto.dragMove = function(event, pointer, moveVector) {
@@ -1996,7 +1899,7 @@ window.EvEmitter();
         }
         this.dragX = dragX;
         this.dragMoveTime = new Date();
-        this.dispatchEvent("dragMove", event, [ pointer, moveVector ]);
+        this.dispatchEvent("dragMove", event, [pointer, moveVector]);
     };
     proto.dragEnd = function(event, pointer) {
         if (this.options.freeScroll) {
@@ -2021,7 +1924,7 @@ window.EvEmitter();
         this.isDragSelect = this.options.wrapAround;
         this.select(index);
         delete this.isDragSelect;
-        this.dispatchEvent("dragEnd", event, [ pointer ]);
+        this.dispatchEvent("dragEnd", event, [pointer]);
     };
     proto.dragEndRestingSelect = function() {
         var restingX = this.getRestingPosition();
@@ -2046,11 +1949,11 @@ window.EvEmitter();
         var index = this.selectedIndex;
         var minDistance = Infinity;
         var condition = this.options.contain && !this.options.wrapAround ? // if contain, keep going if distance is equal to minDistance
-        function(d, md) {
-            return d <= md;
-        } : function(d, md) {
-            return d < md;
-        };
+            function(d, md) {
+                return d <= md;
+            } : function(d, md) {
+                return d < md;
+            };
         while (condition(distance, minDistance)) {
             // measure distance to next cell
             index += increment;
@@ -2076,7 +1979,7 @@ window.EvEmitter();
         var len = this.slides.length;
         // wrap around if at least 2 slides
         var isWrapAround = this.options.wrapAround && len > 1;
-        var slideIndex = isWrapAround ? utils.modulo(index, len) : index;
+        var slideIndex = isWrapAround ? ((index % len + len) % len) : index;
         var slide = this.slides[slideIndex];
         if (!slide) {
             return null;
@@ -2088,7 +1991,7 @@ window.EvEmitter();
     proto.dragEndBoostSelect = function() {
         // do not boost if no previousDragX or dragMoveTime
         if (this.previousDragX === undefined || !this.dragMoveTime || // or if drag was held for 100 ms
-        new Date() - this.dragMoveTime > 100) {
+            new Date() - this.dragMoveTime > 100) {
             return 0;
         }
         var distance = this.getSlideDistance(-this.dragX, this.selectedIndex);
@@ -2108,7 +2011,7 @@ window.EvEmitter();
         var clickedCell = this.getParentCell(event.target);
         var cellElem = clickedCell && clickedCell.element;
         var cellIndex = clickedCell && this.cells.indexOf(clickedCell);
-        this.dispatchEvent("staticClick", event, [ pointer, cellElem, cellIndex ]);
+        this.dispatchEvent("staticClick", event, [pointer, cellElem, cellIndex]);
     };
     // ----- scroll ----- //
     proto.onscroll = function() {
@@ -2187,7 +2090,7 @@ window.EvEmitter();
         var isInside = pointerPoint.x >= boundingRect.left + scrollX && pointerPoint.x <= boundingRect.right + scrollX && pointerPoint.y >= boundingRect.top + scrollY && pointerPoint.y <= boundingRect.bottom + scrollY;
         // trigger callback if pointer is inside element
         if (isInside) {
-            this.emitEvent("tap", [ event, pointer ]);
+            this.emitEvent("tap", [event, pointer]);
         }
         // set flag for emulated clicks 300ms after touchend
         if (event.type != "mouseup") {
@@ -2211,18 +2114,9 @@ window.EvEmitter();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == "function" && define.amd) {
-        // AMD
-        define("flickity/js/prev-next-button", [ "./flickity", "tap-listener/tap-listener", "fizzy-ui-utils/utils" ], function(Flickity, TapListener, utils) {
-            return factory(window, Flickity, TapListener, utils);
-        });
-    } else if (typeof module == "object" && module.exports) {
-        // CommonJS
-        module.exports = factory(window, require("./flickity"), require("tap-listener"), require("fizzy-ui-utils"));
-    } else {
-        // browser global
-        factory(window, window.Flickity, window.TapListener, window.fizzyUIUtils);
-    }
+
+    factory(window, window.Flickity, window.TapListener, window.fizzyUIUtils);
+
 })(window, function factory(window, Flickity, TapListener, utils) {
     "use strict";
     var svgURI = "http://www.w3.org/2000/svg";
@@ -2390,13 +2284,7 @@ window.EvEmitter();
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    if (typeof define == "function" && define.amd) {
-        // AMD
-        define("flickity/js/index", [ "./flickity", "./drag", "./prev-next-button" ], factory);
-    } else if (typeof module == "object" && module.exports) {
-        // CommonJS
-        module.exports = factory(require("./flickity"), require("./drag"), require("./prev-next-button"));
-    }
+
 })(window, function factory(Flickity) {
     /*jshint strict: false*/
     return Flickity;
@@ -2471,6 +2359,7 @@ window.EvEmitter();
         });
         this.changeNavSelectedClass("add");
     };
+
     function lerp(a, b, t) {
         return (b - a) * t + a;
     }
