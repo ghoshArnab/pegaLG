@@ -566,13 +566,11 @@ window.fizzyUIUtils = factory(
     return utils;
 
 }));
-
-
 /* --------------------------------------------- Flickity logic starts --------------------------------------- */
 // Flickity.Cell
 (function(window, factory) {
     // universal module definition
- 
+        window.Flickity = window.Flickity || {};
         window.Flickity.Cell = factory(
             window,
             window.getSize
