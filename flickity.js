@@ -116,20 +116,10 @@ window.EvEmitter();
 (function(window, factory) {
     'use strict';
 
-    if (typeof define == 'function' && define.amd) {
-        // AMD
-        define('get-size/get-size', [], function() {
-            return factory();
-        });
-    } else if (typeof module == 'object' && module.exports) {
-        // CommonJS
-        module.exports = factory();
-    } else {
-        // browser global
-        window.getSize = factory();
-    }
+    window.getSize = factory();
 
-})(window, function factory() {
+
+})(window, function() {
     'use strict';
 
     // -------------------------- helpers -------------------------- //
@@ -314,44 +304,7 @@ window.EvEmitter();
 
 });
 
-/**
- * matchesSelector v2.0.1
- * matchesSelector( element, '.selector' )
- * MIT license
- */
 
-window.matchesSelector = (function(){
-
-    'use strict';
-
-    var matchesMethod = (function() {
-        var ElemProto = Element.prototype;
-        // check for the standard method name first
-        if (ElemProto.matches) {
-            return 'matches';
-        }
-        // check un-prefixed
-        if (ElemProto.matchesSelector) {
-            return 'matchesSelector';
-        }
-        // check vendor prefixes
-        var prefixes = ['webkit', 'moz', 'ms', 'o'];
-
-        for (var i = 0; i < prefixes.length; i++) {
-            var prefix = prefixes[i];
-            var method = prefix + 'MatchesSelector';
-            if (ElemProto[method]) {
-                return method;
-            }
-        }
-    })();
-
-    return function matchesSelector(elem, selector) {
-        return elem[matchesMethod](selector);
-    };
-
-});
-window.matchesSelector();
 /**
  * Fizzy UI utils v2.0.3
  * MIT license
@@ -363,12 +316,11 @@ window.matchesSelector();
     // universal module definition
     /*jshint strict: false */
     /*globals define, module, require */
-window.fizzyUIUtils = factory(
-            window,
-            window.matchesSelector
-        );
+    window.fizzyUIUtils = factory(
+        window
+    );
 
-}(window, function factory(window, matchesSelector) {
+}(window, function factory(window) {
 
 
 
@@ -424,9 +376,8 @@ window.fizzyUIUtils = factory(
     utils.getParent = function(elem, selector) {
         while (elem != document.body) {
             elem = elem.parentNode;
-            if (matchesSelector(elem, selector)) {
-                return elem;
-            }
+            return elem;
+
         }
     };
 
@@ -469,9 +420,9 @@ window.fizzyUIUtils = factory(
             }
             // filter & find items if we have a selector
             // filter
-            if (matchesSelector(elem, selector)) {
-                ffElems.push(elem);
-            }
+
+            ffElems.push(elem);
+
             // find children
             var childElems = elem.querySelectorAll(selector);
             // concat childElems to filterFound array
@@ -519,7 +470,7 @@ window.fizzyUIUtils = factory(
 
     // ----- htmlInit ----- //
 
-   
+
     /**
      * allow user to initialize classes via [data-namespace] or .js-namespace class
      * htmlInit( Widget, 'widgetName' )
@@ -572,12 +523,12 @@ window.fizzyUIUtils = factory(
 // Flickity.Cell
 (function(window, factory) {
     // universal module definition
-        window.Flickity  = window.Flickity || {};
-        window.Flickity.Cell = factory(
-            window,
-            window.getSize
-        );
-    
+    window.Flickity = window.Flickity || {};
+    window.Flickity.Cell = factory(
+        window,
+        window.getSize
+    );
+
 
 }(window, function factory(window, getSize) {
 
@@ -648,9 +599,9 @@ window.fizzyUIUtils = factory(
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-  
-        window.Flickity.Slide = factory();
-    
+
+    window.Flickity.Slide = factory();
+
 
 }(window, function factory() {
     'use strict';
@@ -717,12 +668,12 @@ window.fizzyUIUtils = factory(
 (function(window, factory) {
     // universal module definition
     /* jshint strict: false */
-    
-        window.Flickity.animatePrototype = factory(
-            window,
-            window.fizzyUIUtils
-        );
-    
+
+    window.Flickity.animatePrototype = factory(
+        window,
+        window.fizzyUIUtils
+    );
+
 
 }(window, function factory(window, utils) {
 
@@ -1780,13 +1731,13 @@ window.fizzyUIUtils = factory(
 
 (function(window, factory) {
     // universal module definition
-  
-        // browser global
-        window.Unipointer = factory(
-            window,
-            window.EvEmitter
-        );
-    
+
+    // browser global
+    window.Unipointer = factory(
+        window,
+        window.EvEmitter
+    );
+
 
 }(window, function factory(window, EvEmitter) {
 
@@ -2071,13 +2022,13 @@ window.fizzyUIUtils = factory(
 (function(window, factory) {
     // universal module definition
     /*jshint strict: false */
-   
-        // browser global
-        window.Unidragger = factory(
-            window,
-            window.Unipointer
-        );
-    
+
+    // browser global
+    window.Unidragger = factory(
+        window,
+        window.Unipointer
+    );
+
 
 }(window, function factory(window, Unipointer) {
 
@@ -2733,12 +2684,12 @@ window.fizzyUIUtils = factory(
     /*jshint strict: false*/
     /*globals define, module, require */
 
-        // browser global
-        window.TapListener = factory(
-            window,
-            window.Unipointer
-        );
-    
+    // browser global
+    window.TapListener = factory(
+        window,
+        window.Unipointer
+    );
+
 
 }(window, function factory(window, Unipointer) {
 
@@ -3093,12 +3044,12 @@ window.fizzyUIUtils = factory(
     // universal module definition
     /*jshint strict: false */
     /*globals define, module, require */
-    
-        window.Flickity = factory(
-            window.Flickity,
-            window.fizzyUIUtils
-        );
-    
+
+    window.Flickity = factory(
+        window.Flickity,
+        window.fizzyUIUtils
+    );
+
 
 }(window, function factory(Flickity, utils) {
 
