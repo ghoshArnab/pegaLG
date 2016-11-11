@@ -235,12 +235,12 @@ var TabSwipeLayoutGroupModule = (function(p) {
         var borderHeight = sizeObj.borderTopWidth + sizeObj.borderBottomWidth;
         var isBorderBoxSizeOuter = isBorderBox && isBoxSizeOuter;
         // overwrite width and height if we can get it from style
-        var styleWidth = getStyleSize(style.width);
+        var styleWidth = _getStyleSize(style.width);
         if (styleWidth !== false) {
             sizeObj.width = styleWidth + ( // add padding and border unless it's already including it
                 isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth);
         }
-        var styleHeight = getStyleSize(style.height);
+        var styleHeight = _getStyleSize(style.height);
         if (styleHeight !== false) {
             sizeObj.height = styleHeight + ( // add padding and border unless it's already including it
                 isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight);
@@ -250,7 +250,78 @@ var TabSwipeLayoutGroupModule = (function(p) {
         sizeObj.outerWidth = sizeObj.width + marginWidth;
         sizeObj.outerHeight = sizeObj.height + marginHeight;
         return sizeObj;
-    }
+    },
 
+    _extend = function (targetObj, sourceObj) {
+        for (var prop in sourceObj) {
+            targetObj[prop] = sourceObj[prop];
+        }
+        return targetObj;
+    },
+
+    _createArray = function (obj) {
+        var ary = [];
+        if (obj && typeof obj.length == "number") {
+            // convert nodeList to array
+            for (var i = 0; i < obj.length; i++) {
+                ary.push(obj[i]);
+            }
+        } else {
+            // array of single index
+            ary.push(obj);
+        }
+        return ary;
+    },
+
+    _getQuerySelector = function (elem) {
+        if (typeof elem == "string") {
+            return document.querySelector(elem);
+        }
+        return elem;
+    },
+
+    _createElementsArray = function (elems, selector) {
+        elems = _createArray(elems);
+        var elemsArray = [];
+        elems.forEach(function (elem) {
+            if (!(elem instanceof HTMLElement)) {
+                return;
+            }            
+            if (!selector) {
+                elemsArray.push(elem);
+                return;
+            }
+            elemsArray.push(elem);
+            var childElems = elem.querySelectorAll(selector);
+            for (var i = 0; i < childElems.length; i++) {
+                elemsArray.push(childElems[i]);
+            }
+        });
+        return elemsArray;
+    },
+
+    //TODO : NEED TO WRITE THIS - NIKHIL
+    _htmlInit = function(WidgetClass, namespace) {
+        document.addEventListener("DOMContentLoaded", function () {
+            //var dashedNamespace = utils.toDashed(namespace);
+            var dataAttr = "data-" + namespace;
+            var dataAttrElems = document.querySelectorAll("[" + dataAttr + "]");
+            var jsDashElems = document.querySelectorAll(".js-" + namespace);
+            var elems = _createArray(dataAttrElems).concat(_createArray(jsDashElems));
+            var dataOptionsAttr = dataAttr + "-options";
+            var jQuery = window.jQuery;
+            elems.forEach(function (elem) {
+                var attr = elem.getAttribute(dataAttr) || elem.getAttribute(dataOptionsAttr);
+                var options;
+                options = attr && JSON.parse(attr);
+                // initialize
+                var instance = new WidgetClass(elem, options);
+                // make available via $().data('namespace')
+                if (jQuery) {
+                    jQuery.data(elem, namespace, instance);
+                }
+            });
+        });
+    },
 
 })();
