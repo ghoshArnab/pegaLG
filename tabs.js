@@ -80,7 +80,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
 
 
     _emitEvent = function(evt, args) {
-        var listenersMap = _getListenersAsObject(evt),listeners,listener,i,key;
+        var listenersMap = _getListenersArray(evt),listeners,listener,i,key;
         var response;
 
         for (key in listenersMap) {
@@ -118,7 +118,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
     };
 
     _removeListener = function(evt, listener) {
-        var listeners = _getListenersAsObject(evt);
+        var listeners = _getListenersArray(evt);
         var index;
         var key;
 
