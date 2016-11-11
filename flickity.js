@@ -30,21 +30,6 @@ window.EvEmitter = function() {
         }
         return this;
     };
-    proto.once = function(eventName, listener) {
-        if (!eventName || !listener) {
-            return;
-        }
-        // add event
-        this.on(eventName, listener);
-        // set once flag
-        // set onceEvents hash
-        var onceEvents = this._onceEvents = this._onceEvents || {};
-        // set onceListeners object
-        var onceListeners = onceEvents[eventName] = onceEvents[eventName] || {};
-        // set flag
-        onceListeners[listener] = true;
-        return this;
-    };
     proto.off = function(eventName, listener) {
         var listeners = this._events && this._events[eventName];
         if (!listeners || !listeners.length) {
@@ -2269,25 +2254,6 @@ window.EvEmitter();
     };
     // --------------------------  -------------------------- //
     Flickity.PrevNextButton = PrevNextButton;
-    return Flickity;
-});
-
-/*!
- * Flickity v2.0.5
- * Touch, responsive, flickable carousels
- *
- * Licensed GPLv3 for open source use
- * or Flickity Commercial License for commercial use
- *
- * http://flickity.metafizzy.co
- * Copyright 2016 Metafizzy
- */
-(function(window, factory) {
-    // universal module definition
-    /* jshint strict: false */
-
-})(window, function factory(Flickity) {
-    /*jshint strict: false*/
     return Flickity;
 });
 
