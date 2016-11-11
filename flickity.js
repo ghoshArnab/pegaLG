@@ -239,10 +239,7 @@ window.EvEmitter();
     // turn element or nodeList into an array
     utils.makeArray = function(obj) {
         var ary = [];
-        if (Array.isArray(obj)) {
-            // use object if already an array
-            ary = obj;
-        } else if (obj && typeof obj.length == "number") {
+        if (obj && typeof obj.length == "number") {
             // convert nodeList to array
             for (var i = 0; i < obj.length; i++) {
                 ary.push(obj[i]);
@@ -263,14 +260,6 @@ window.EvEmitter();
             return document.querySelector(elem);
         }
         return elem;
-    };
-    // ----- handleEvent ----- //
-    // enable .ontype to trigger from .addEventListener( elem, 'type' )
-    utils.handleEvent = function(event) {
-        var method = "on" + event.type;
-        if (this[method]) {
-            this[method](event);
-        }
     };
     // ----- filterFindElements ----- //
     utils.filterFindElements = function(elems, selector) {
