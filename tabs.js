@@ -9,7 +9,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
         } else if (listener && typeof listener === 'object') {
             return _isValidListener(listener.listener);
         } else {
-            return false
+            return false;
         }
     },
 
@@ -25,7 +25,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
             response = {};
             response[evt] = listeners;
         }
-
         return response || listeners;
     };
 
@@ -45,7 +44,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
         else {
             response = events[evt] || (events[evt] = []);
         }
-
         return response;
     };
 
@@ -67,7 +65,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
                 });
             }
         }
-
         return this;
     },
 
@@ -104,7 +101,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
                 }
             }
         }
-
         return this;
     },
 
@@ -113,7 +109,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
             return this._onceReturnValue;
         }
         else {
-            return true;
+            return !0;
         }
     };
 
@@ -131,7 +127,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
                 }
             }
         }
-
         return this;
     },
 
@@ -142,7 +137,6 @@ var TabSwipeLayoutGroupModule = (function(p) {
                 return i;
             }
         }
-
         return -1;
     }
 
