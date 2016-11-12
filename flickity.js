@@ -256,6 +256,14 @@ window.EvEmitter();
         }
         return elem;
     };
+    // ----- handleEvent ----- //
+    // enable .ontype to trigger from .addEventListener( elem, 'type' )
+    utils.handleEvent = function (event) {
+        var method = 'on' + event.type;
+        if (this[method]) {
+            this[method](event);
+        }
+    };
     // ----- filterFindElements ----- //
     utils.filterFindElements = function (elems, selector) {
         // make array of elems
