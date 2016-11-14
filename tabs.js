@@ -18,6 +18,17 @@ var TabSwipeLayoutGroupModule = (function(p) {
     dimensionsLen = dimensions.length,
     isBorderCheck = false,
     isBoxSizeOuter = false,
+    touchStart = 'touchstart',
+    mouseDown  = 'mousedown',
+    pointerIdentifier = "",
+    isPointerDown = false,
+    postStartEvents = {
+        mousedown: ["mousemove", "mouseup"],
+        touchstart: ["touchmove", "touchend", "touchcancel"],
+        pointerdown: ["pointermove", "pointerup", "pointercancel"],
+        MSPointerDown: ["MSPointerMove", "MSPointerUp", "MSPointerCancel"]
+    },
+    boundPointerEvents = "",
 
     _isValidListener = function (listener) {
         if (typeof listener === 'function' || listener instanceof RegExp) {
@@ -93,8 +104,8 @@ var TabSwipeLayoutGroupModule = (function(p) {
 
 
     _emitEvent = function(evt, args) {
-        var listenersMap = _getListenersArray(evt),listeners,listener,i,key;
-        var response;
+        var listenersMap = _getListenersArray(evt);
+        var listeners,listener,i,key,response;
 
         for (key in listenersMap) {
             if (listenersMap.hasOwnProperty(key)) {
@@ -323,5 +334,171 @@ var TabSwipeLayoutGroupModule = (function(p) {
             });
         });
     },
+
+    _bindEvent = function(elem){
+        elem["addEventListener"](mouseDown, this);
+        elem["addEventListener"](touchStart, this);
+    },
+
+    _unbindEvent = function(elem){
+        elem["removeEventListener"](mouseDown, this);
+        elem["removeEventListener"](touchStart, this);
+    },
+
+    _getTouch = function(touches) {
+        for (var i = 0; i < touches.length; i++) {
+            var touch = touches[i];
+            if (touch.identifier == pointerIdentifier) {
+                return touch;
+            }
+        }
+    },
+
+    _onMouseDown = function (event) {
+        if (event && event.button && (event.button !== 0 && event.button !== 1)) {
+            return;
+        }
+        this._pointerDown(event, event);
+    },
+
+    _pointerDown = function (event, pointer) {
+        // dismiss other pointers
+        if (isPointerDown) {
+            return;
+        }
+        isPointerDown = true;
+        // save pointer identifier to match up touch events
+        pointerIdentifier = pointer.pointerId !== undefined ? // pointerId for pointer events, touch.indentifier for touch events
+            pointer.pointerId : pointer.identifier;
+        _eventFirePointerDown(event, pointer);
+    },
+
+    _eventFirePointerDown = function (event, pointer) {
+        _bindPostStartEvents(event);
+        _emitEvent("pointerDown", [event, pointer]);
+    },
+
+    _bindPostStartEvents = function (event) {
+        if (!event) {
+            return;
+        }
+        // get proper events to match start event
+        var events = postStartEvents[event.type];
+        // bind events to node
+        events.forEach(function (eventName) {
+            window.addEventListener(eventName, this);
+        }, this);
+        // save these arguments
+        boundPointerEvents = events;
+    },
+
+    _unbindPostStartEvents = function () {
+        // check for _boundEvents, in case dragEnd triggered twice (old IE8 bug)
+        if (!_boundPointerEvents) {
+            return;
+        }
+        _boundPointerEvents.forEach(function (eventName) {
+            window.removeEventListener(eventName, this);
+        }, this);
+        _boundPointerEvents = "";
+    }, 
+
+    _onTouchStart = function (event) {
+        _pointerDown(event, event.changedTouches[0]);
+    },
+
+    onMSPointerDown = function (event) {
+        _pointerDown(event, event);
+    },
+
+    _onMouseMove = function (event) {
+        _pointerMove(event, event);
+    },
+
+    _onMSPointerMove = function (event) {
+        if (event.pointerId == pointerIdentifier) {
+            _pointerMove(event, event);
+        }
+    },
+    
+    _onTouchMove = function (event) {
+        var touch = _getTouch(event.changedTouches);
+        if (touch) {
+            _pointerMove(event, touch);
+        }
+    },
+
+    _pointerMove = function (event, pointer) {
+        _eventFirePointerMove(event, pointer);
+    },
+
+    _eventFirePointerMove = function (event, pointer) {
+        _emitEvent("pointerMove", [event, pointer]);
+    },
+
+    _onMouseUp = function (event) {
+        _pointerUp(event, event);
+    },
+
+    _onMSPointerUp = function (event) {
+        if (event.pointerId == pointerIdentifier) {
+            _pointerUp(event, event);
+        }
+    },
+    
+    _onToucheEnd = function (event) {
+        var touch = _getTouch(event.changedTouches);
+        if (touch) {
+            _pointerUp(event, touch);
+        }
+    },
+
+    _pointerUp = function (event, pointer) {
+        _pointerDone();
+        _eventFirePointerUp(event, pointer);
+    },
+
+    _eventFirePointerUp = function (event, pointer) {
+        _emitEvent("pointerUp", [event, pointer]);
+    },
+
+    _pointerDone = function () {
+        // reset properties
+        isPointerDown = false;
+        pointerIdentifier = "";
+        // remove events
+        _unbindPostStartEvents();
+        
+    },
+
+    _onMSPointerCancel = function (event) {
+        if (event.pointerId == this.pointerIdentifier) {
+            this._pointerCancel(event, event);
+        }
+    },
+
+    _onTouchCancel = function (event) {
+        var touch = _getTouch(event.changedTouches);
+        if (touch) {
+            _pointerCancel(event, touch);
+        }
+    },
+    
+    _pointerCancel = function (event, pointer) {
+        _pointerDone();
+        _eventFirePointerCancel(event, pointer);
+    },
+
+    _eventFirePointerCancel = function (event, pointer) {
+        _emitEvent("pointerCancel", [event, pointer]);
+    },
+
+    _getPointerCordinates = function (pointer) {
+        return {
+            x: pointer.pageX,
+            y: pointer.pageY
+        };
+    },
+
 
 })();
