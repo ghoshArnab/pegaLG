@@ -247,6 +247,16 @@ window.EvEmitter();
         }
         return ary;
     };
+    utils.setText = (function () {
+        var setTextProperty;
+
+/*        function setText(elem, text) {
+            // only check setTextProperty once
+            //setTextProperty = setTextProperty || (document.documentElement.textContent !== undefined ? 'textContent' : 'innerText');
+            elem[setTextProperty] = text;
+        }
+        //return setText;*/
+    });
     // ----- removeFrom ----- //
     // ----- getQueryElement ----- //
     // use element as selector string
@@ -2073,7 +2083,6 @@ window.EvEmitter();
     factory(window, window.Flickity, window.TapListener, window.fizzyUIUtils);
 })(window, function factory(window, Flickity, TapListener, utils) {
     "use strict";
-    var svgURI = "http://www.w3.org/2000/svg";
     // -------------------------- PrevNextButton -------------------------- //
     function PrevNextButton(direction, parent) {
         this.direction = direction;
@@ -2096,8 +2105,7 @@ window.EvEmitter();
         this.disable();
         element.setAttribute("aria-label", this.isPrevious ? "previous" : "next");
         // create arrow
-        var svg = this.createSVG();
-        element.appendChild(svg);
+        this.setArrowText();
         // events
         this.on("tap", this.onTap);
         this.parent.on("select", this.update.bind(this));
@@ -2118,29 +2126,10 @@ window.EvEmitter();
         // click events from keyboard
         this.element.removeEventListener("click", this);
     };
-    PrevNextButton.prototype.createSVG = function () {
-        var svg = document.createElementNS(svgURI, "svg");
-        svg.setAttribute("viewBox", "0 0 100 100");
-        var path = document.createElementNS(svgURI, "path");
-        var pathMovements = getArrowMovements(this.parent.options.arrowShape);
-        path.setAttribute("d", pathMovements);
-        path.setAttribute("class", "arrow");
-        // rotate arrow
-        if (!this.isLeft) {
-            path.setAttribute("transform", "translate(100, 100) rotate(180) ");
-        }
-        svg.appendChild(path);
-        return svg;
+    PrevNextButton.prototype.setArrowText = function () {
+        var arrowText = this.isLeft ? "<" : ">";
+        //utils.setText(this.element, arrowText);
     };
-    // get SVG path movmement
-    function getArrowMovements(shape) {
-        // use shape as movement if string
-        if (typeof shape == "string") {
-            return shape;
-        }
-        // create movement string
-        return "M " + shape.x0 + ",50" + " L " + shape.x1 + "," + (shape.y1 + 50) + " L " + shape.x2 + "," + (shape.y2 + 50) + " L " + shape.x3 + ",50 " + " L " + shape.x2 + "," + (50 - shape.y2) + " L " + shape.x1 + "," + (50 - shape.y1) + " Z";
-    }
     PrevNextButton.prototype.onTap = function () {
         if (!this.isEnabled) {
             return;
@@ -2190,15 +2179,7 @@ window.EvEmitter();
     };
     // -------------------------- Flickity prototype -------------------------- //
     utils.extend(Flickity.defaults, {
-        prevNextButtons: true,
-        arrowShape: {
-            x0: 10,
-            x1: 60,
-            y1: 50,
-            x2: 70,
-            y2: 40,
-            x3: 30
-        }
+        prevNextButtons: true
     });
     Flickity.createMethods.push("_createPrevNextButtons");
     var proto = Flickity.prototype;
