@@ -247,16 +247,6 @@ window.EvEmitter();
         }
         return ary;
     };
-    utils.setText = (function () {
-        var setTextProperty;
-
-/*        function setText(elem, text) {
-            // only check setTextProperty once
-            //setTextProperty = setTextProperty || (document.documentElement.textContent !== undefined ? 'textContent' : 'innerText');
-            elem[setTextProperty] = text;
-        }
-        //return setText;*/
-    });
     // ----- removeFrom ----- //
     // ----- getQueryElement ----- //
     // use element as selector string
@@ -2094,8 +2084,6 @@ window.EvEmitter();
         // properties
         this.isEnabled = true;
         this.isPrevious = this.direction == -1;
-        var leftDirection = this.parent.options.rightToLeft ? 1 : -1;
-        this.isLeft = this.direction == leftDirection;
         var element = this.element = document.createElement("button");
         element.className = "flickity-prev-next-button";
         element.className += this.isPrevious ? " previous" : " next";
@@ -2104,8 +2092,6 @@ window.EvEmitter();
         // init as disabled
         this.disable();
         element.setAttribute("aria-label", this.isPrevious ? "previous" : "next");
-        // create arrow
-        this.setArrowText();
         // events
         this.on("tap", this.onTap);
         this.parent.on("select", this.update.bind(this));
@@ -2125,10 +2111,6 @@ window.EvEmitter();
         TapListener.prototype.destroy.call(this);
         // click events from keyboard
         this.element.removeEventListener("click", this);
-    };
-    PrevNextButton.prototype.setArrowText = function () {
-        var arrowText = this.isLeft ? "<" : ">";
-        //utils.setText(this.element, arrowText);
     };
     PrevNextButton.prototype.onTap = function () {
         if (!this.isEnabled) {
