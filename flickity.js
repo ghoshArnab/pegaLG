@@ -1318,9 +1318,6 @@ window.EvEmitter();
     proto.ontouchstart = function (event) {
         this._pointerDown(event, event.changedTouches[0]);
     };
-    proto.onMSPointerDown = proto.onpointerdown = function (event) {
-        this._pointerDown(event, event);
-    };
     /**
      * pointer start
      * @param {Event} event
@@ -1345,8 +1342,7 @@ window.EvEmitter();
     var postStartEvents = {
         mousedown: ["mousemove", "mouseup"],
         touchstart: ["touchmove", "touchend", "touchcancel"],
-        pointerdown: ["pointermove", "pointerup", "pointercancel"],
-        MSPointerDown: ["MSPointerMove", "MSPointerUp", "MSPointerCancel"]
+        pointerdown: ["pointermove", "pointerup", "pointercancel"]
     };
     proto._bindPostStartEvents = function (event) {
         if (!event) {
@@ -1375,11 +1371,6 @@ window.EvEmitter();
     proto.onmousemove = function (event) {
         this._pointerMove(event, event);
     };
-    proto.onMSPointerMove = proto.onpointermove = function (event) {
-        if (event.pointerId == this.pointerIdentifier) {
-            this._pointerMove(event, event);
-        }
-    };
     proto.ontouchmove = function (event) {
         var touch = this.getTouch(event.changedTouches);
         if (touch) {
@@ -1402,11 +1393,6 @@ window.EvEmitter();
     // ----- end event ----- //
     proto.onmouseup = function (event) {
         this._pointerUp(event, event);
-    };
-    proto.onMSPointerUp = proto.onpointerup = function (event) {
-        if (event.pointerId == this.pointerIdentifier) {
-            this._pointerUp(event, event);
-        }
     };
     proto.ontouchend = function (event) {
         var touch = this.getTouch(event.changedTouches);
@@ -1439,12 +1425,6 @@ window.EvEmitter();
         this.pointerDone();
     };
     proto.pointerDone = noop;
-    // ----- pointer cancel ----- //
-    proto.onMSPointerCancel = proto.onpointercancel = function (event) {
-        if (event.pointerId == this.pointerIdentifier) {
-            this._pointerCancel(event, event);
-        }
-    };
     proto.ontouchcancel = function (event) {
         var touch = this.getTouch(event.changedTouches);
         if (touch) {
@@ -1515,11 +1495,6 @@ window.EvEmitter();
             binderExtra = function (handle) {
                 // disable scrolling on the element
                 handle.style.touchAction = isBind ? "none" : "";
-            };
-        } else if (navigator.msPointerEnabled) {
-            binderExtra = function (handle) {
-                // disable scrolling on the element
-                handle.style.msTouchAction = isBind ? "none" : "";
             };
         } else {
             binderExtra = noop;
@@ -1790,8 +1765,7 @@ window.EvEmitter();
         this.dispatchEvent("pointerDown", event, [pointer]);
     };
     var touchStartEvents = {
-        touchstart: true,
-        MSPointerDown: true
+        touchstart: true
     };
     var focusNodes = {
         INPUT: true,
