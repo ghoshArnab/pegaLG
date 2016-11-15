@@ -976,7 +976,7 @@ window.EvEmitter();
     proto.dispatchEvent = function (type, event, args) {
         var emitArgs = event ? [event].concat(args) : args;
         this.emitEvent(type, emitArgs);
-        if (jQuery && this.$element) {
+        /*if (jQuery && this.$element) {
             // default trigger with type if no event
             type += this.options.namespaceJQueryEvents ? ".flickity" : "";
             var $event = type;
@@ -987,7 +987,7 @@ window.EvEmitter();
                 $event = jQEvent;
             }
             this.$element.trigger($event, args);
-        }
+        }*/
     };
     // -------------------------- select -------------------------- //
     /**
@@ -1157,15 +1157,8 @@ window.EvEmitter();
         return this.getCell(elem.parentNode);
     };
     // -------------------------- events -------------------------- //
-    proto.uiChange = function () {
-        this.emitEvent("uiChange");
-    };
     proto.childUIPointerDown = function (event) {
         this.emitEvent("childUIPointerDown", [event]);
-    };
-    // ----- resize ----- //
-    proto.onresize = function () {
-        this.resize();
     };
     proto.resize = function () {
         if (!this.isActive) {
@@ -1195,12 +1188,12 @@ window.EvEmitter();
         if (event.keyCode == 37) {
             // go left
             var leftMethod = this.options.rightToLeft ? "next" : "previous";
-            this.uiChange();
+            this.emitEvent("uiChange");
             this[leftMethod]();
         } else if (event.keyCode == 39) {
             // go right
             var rightMethod = this.options.rightToLeft ? "previous" : "next";
-            this.uiChange();
+            this.emitEvent("uiChange");
             this[rightMethod]();
         }
     };
@@ -1409,10 +1402,6 @@ window.EvEmitter();
     proto._pointerUp = function (event, pointer) {
         this._pointerDone();
         this.pointerUp(event, pointer);
-    };
-    // public
-    proto.pointerUp = function (event, pointer) {
-        this.emitEvent("pointerUp", [event, pointer]);
     };
     // ----- pointer done ----- //
     // triggered on pointer up & pointer cancel
@@ -2072,7 +2061,7 @@ window.EvEmitter();
         if (!this.isEnabled) {
             return;
         }
-        this.parent.uiChange();
+        this.parent.emitEvent("uiChange");
         var method = this.isPrevious ? "previous" : "next";
         this.parent[method]();
     };
