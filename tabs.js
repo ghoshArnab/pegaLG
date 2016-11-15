@@ -36,6 +36,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
     isDragging = false,
     dragStartPoint,
     clickBlocked = false,
+    tapElement,
 
     _emptyHandler = function(){
     },
@@ -465,7 +466,9 @@ var TabSwipeLayoutGroupModule = (function(p) {
 
     _pointerUp = function (event, pointer) {
         _pointerDone();
-        _eventFirePointerUp(event, pointer);
+        //TODO
+        //_eventFirePointerUp(event, pointer);
+        _arrowPointerUp(event, pointer);
     },
 
     _eventFirePointerUp = function (event, pointer) {
@@ -591,6 +594,41 @@ var TabSwipeLayoutGroupModule = (function(p) {
         }
     },
 
+    _arrowPointerUp = function (event, pointer) {
+        debugger;
+        // ignore emulated mouse up clicks
+        if (event.type == "mouseup") {
+            return;
+        }
+        var pointerPoint = _getPointerCordinates(pointer);
+        var boundingRect = this.tapElement.getBoundingClientRect();
+        var scrollX = window.pageXOffset;
+        var scrollY = window.pageYOffset;
+        // calculate if pointer is inside tapElement
+        var isInside = pointerPoint.x >= boundingRect.left + scrollX && pointerPoint.x <= boundingRect.right + scrollX && pointerPoint.y >= boundingRect.top + scrollY && pointerPoint.y <= boundingRect.bottom + scrollY;
+        // trigger callback if pointer is inside element
+        if (isInside) {
+            _emitEvent("tap", [event, pointer]);
+        }
+        
+    },
+
+    _bindTap = function (elem) {
+        if (!elem) {
+            return;
+        }
+        _unbindTap();
+        tapElement = elem;
+        _bindEvent(elem);
+    },
+    
+    _unbindTap = function () {
+        if (!tapElement) {
+            return;
+        }
+        _bindEvent(tapElement);
+        tapElement = "";
+    }
 
 
 })();
