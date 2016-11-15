@@ -1514,24 +1514,6 @@ window.EvEmitter();
      * @param {Event} event
      * @param {Event or Touch} pointer
      */
-    proto.pointerDown = function (event, pointer) {
-        // dismiss range sliders
-        /*if (event.target.nodeName == "INPUT" && event.target.type == "range") {
-            // reset pointerDown logic
-            this.isPointerDown = false;
-            delete this.pointerIdentifier;
-            return;
-        }*/
-        this._dragPointerDown(event, pointer);
-        // kludge to blur focused inputs in dragger
-        var focused = document.activeElement;
-        if (focused && focused.blur) {
-            focused.blur();
-        }
-        // bind move and end events
-        this._bindPostStartEvents(event);
-        this.emitEvent("pointerDown", [event, pointer]);
-    };
     // base pointer down logic
     proto._dragPointerDown = function (event, pointer) {
         // track to see when dragging starts
