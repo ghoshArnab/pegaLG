@@ -29,6 +29,16 @@ var TabSwipeLayoutGroupModule = (function(p) {
         MSPointerDown: ["MSPointerMove", "MSPointerUp", "MSPointerCancel"]
     },
     boundPointerEvents = "",
+    handles = "",
+    pointerDownPoint,
+    thresholdMoveX = 3,
+    thresholdMoveY = 3,
+    isDragging = false,
+    dragStartPoint,
+    clickBlocked = false,
+
+    _emptyHandler = function(){
+    },
 
     _isValidListener = function (listener) {
         if (typeof listener === 'function' || listener instanceof RegExp) {
@@ -407,7 +417,7 @@ var TabSwipeLayoutGroupModule = (function(p) {
         _pointerDown(event, event.changedTouches[0]);
     },
 
-    onMSPointerDown = function (event) {
+    _onMSPointerDown = function (event) {
         _pointerDown(event, event);
     },
 
@@ -499,6 +509,88 @@ var TabSwipeLayoutGroupModule = (function(p) {
             y: pointer.pageY
         };
     },
+
+    _bindEventsFunction = function () {
+        for (var i = 0; i < handles.length; i++) {
+            var handle = handles[i];
+            _bindEvent(handle);
+            handle.style.touchAction =  "none";
+            handle["addEventListener"]("click", this);
+        }
+    },
+
+    _unbindEventsFunction = function () {
+        for (var i = 0; i < handles.length; i++) {
+            var handle = handles[i];
+            _unbindEvent(handle);
+            handle.style.touchAction =  "";
+            handle["removeEventListener"]("click", this);
+        }
+    },
+
+    _dragPointerDown = function (event, pointer) {
+        pointerDownPoint = _getPointerCordinates(pointer);
+    },
+
+    _dragPointerMove = function (event, pointer) {
+        var movePoint = _getPointerCordinates(pointer);
+        var distanceTravel = {
+            x: movePoint.x - pointerDownPoint.x,
+            y: movePoint.y - pointerDownPoint.y
+        };
+        // start drag if pointer has moved far enough to start drag
+        if (!isDragging && (Math.abs(distanceTravel.x) > thresholdMoveX || Math.abs(distanceTravel.y) > thresholdMoveX)) {
+            _dragStart(event, pointer);
+        }
+        return distanceTravel;
+    },
+
+    _dragStart = function (event, pointer) {
+        isDragging = true;
+        dragStartPoint = _getPointerCordinates(pointer);
+        clickBlocked = true;
+        _emitEvent("dragStart", [event, pointer]);
+    },
+
+    _dragPointerUp = function (event, pointer) {
+        if (isDragging) {
+            this._dragEnd(event, pointer);
+        } else {
+            this._staticClick(event, pointer);
+        }
+    },
+
+    _dragEnd = function (event, pointer) {
+        isDragging = false;
+        // re-enable clicking async
+        setTimeout(function () {
+            clickBlocked = false;
+        }.bind(this));
+        _emitEvent("dragEnd", [event, pointer]);
+    },
+
+    _dragMove = function (event, pointer, distanceTravel) {
+        if (!isDragging) {
+            return;
+        }
+        event.preventDefault();
+        _emitEvent("dragMove", [event, pointer, distanceTravel]);
+    },
+
+    _staticClick = function (event, pointer) {
+        // ignore emulated mouse up clicks
+        if (event.type == "mouseup") {
+            return;
+        }        
+        _emitEvent("staticClick", [event, pointer]);        
+    },
+
+    onclick = function (event) {
+        if (clickBlocked) {
+            event.preventDefault();
+        }
+    },
+
 
 
 })();
