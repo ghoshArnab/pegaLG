@@ -312,10 +312,6 @@ window.EvEmitter();
                 options = attr && JSON.parse(attr);
                 // initialize
                 var instance = new WidgetClass(elem, options);
-                // make available via $().data('namespace')
-                if (jQuery) {
-                    jQuery.data(elem, namespace, instance);
-                }
             });
         });
     };
@@ -976,18 +972,6 @@ window.EvEmitter();
     proto.dispatchEvent = function (type, event, args) {
         var emitArgs = event ? [event].concat(args) : args;
         this.emitEvent(type, emitArgs);
-        /*if (jQuery && this.$element) {
-            // default trigger with type if no event
-            type += this.options.namespaceJQueryEvents ? ".flickity" : "";
-            var $event = type;
-            if (event) {
-                // create jQuery event
-                var jQEvent = jQuery.Event(event);
-                jQEvent.type = type;
-                $event = jQEvent;
-            }
-            this.$element.trigger($event, args);
-        }*/
     };
     // -------------------------- select -------------------------- //
     /**
