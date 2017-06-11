@@ -115,43 +115,13 @@ window.EvEmitter();
         var method = "on" + event.type;
         this[method] && this[method](event);
     };
-    utils.filterFindElements = function (elems, selector) {
-        elems = utils.makeArray(elems);
-        var ffElems = [];
-        elems.forEach(function (elem) {
-            var childElems, i;
-            if (elem instanceof HTMLElement)
-                if (selector) {
-                    ffElems.push(elem);
-                    childElems = elem.querySelectorAll(selector);
-                    for (i = 0; i < childElems.length; i++) ffElems.push(childElems[i]);
-                } else ffElems.push(elem);
-        });
-        return ffElems;
-    };
-    utils.htmlInit = function (WidgetClass, namespace) {
-        document.addEventListener("DOMContentLoaded", function () {
-            var dataAttr = "data-" + namespace,
-                dataAttrElems = document.querySelectorAll("[" + dataAttr + "]"),
-                jsDashElems = document.querySelectorAll(".js-" + namespace),
-                elems = utils.makeArray(dataAttrElems).concat(utils.makeArray(jsDashElems)),
-                dataOptionsAttr = dataAttr + "-options";
-            //window.jQuery;
-            elems.forEach(function (elem) {
-                var attr = elem.getAttribute(dataAttr) || elem.getAttribute(dataOptionsAttr),
-                    options = attr && JSON.parse(attr);
-                new WidgetClass(elem, options);
-            });
-        });
-    };
     return utils;
 });
 
 
 // arnab
-var modularpattern = (function () {
-    // your module code goes here
-    makeArray1 = function (obj) {
+var baseUtils = (function () {
+    generateArray = function (obj) {
         var i, ary = [];
         if (obj && "number" == typeof obj.length)
             for (i = 0; i < obj.length; i++) ary.push(obj[i]);
@@ -159,10 +129,9 @@ var modularpattern = (function () {
         return ary;
     };
 
-
     return {
-        add1: function (elems, selector) {
-            elems = makeArray1(elems);
+        filter: function (elems, selector) {
+            elems = generateArray(elems);
             var ffElems = [];
             elems.forEach(function (elem) {
                 var childElems, i;
@@ -174,12 +143,23 @@ var modularpattern = (function () {
                     } else ffElems.push(elem);
             });
             return ffElems;
+        },
+        render: function (WidgetClass, namespace) {
+            document.addEventListener("DOMContentLoaded", function () {
+                var dataAttr = "data-" + namespace,
+                    dataAttrElems = document.querySelectorAll("[" + dataAttr + "]"),
+                    jsDashElems = document.querySelectorAll(".js-" + namespace),
+                    elems = generateArray(dataAttrElems).concat(generateArray(jsDashElems)),
+                    dataOptionsAttr = dataAttr + "-options";
+                elems.forEach(function (elem) {
+                    var attr = elem.getAttribute(dataAttr) || elem.getAttribute(dataOptionsAttr),
+                        options = attr && JSON.parse(attr);
+                    new WidgetClass(elem, options);
+                });
+            });
         }
     }
 }());
-
-
-
 
 
 
@@ -482,7 +462,7 @@ var modularpattern = (function () {
         this.slider = slider;
     };
     proto._filterFindCellElements = function (elems) {
-        return modularpattern.add1(elems, this.options.cellSelector);
+        return baseUtils.filter(elems, this.options.cellSelector);
     };
     proto._makeCells = function (elems) {
         var cellElems = this._filterFindCellElements(elems),
@@ -766,7 +746,7 @@ var modularpattern = (function () {
         var id = elem && elem.flickityGUID;
         return id && instances[id];
     };
-    utils.htmlInit(Flickity, "flickity");
+    baseUtils.render(Flickity, "flickity");
     Flickity.Cell = Cell;
     return Flickity;
 });
