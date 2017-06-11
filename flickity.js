@@ -1,329 +1,193 @@
-/*!
- * Flickity PACKAGED v2.0.5
- * Touch, responsive, flickable carousels
- *
- * Licensed GPLv3 for open source use
- * or Flickity Commercial License for commercial use
- *
- * http://flickity.metafizzy.co
- * Copyright 2016 Metafizzy
- */
-/**
- * EvEmitter v1.0.3
- * Lil' event emitter
- * MIT License
- */
-/* jshint unused: true, undef: true, strict: true */
 window.EvEmitter = function () {
     var proto = EvEmitter.prototype;
     proto.on = function (eventName, listener) {
-        if (!eventName || !listener) {
-            return;
+        var events, listeners;
+        if (eventName && listener) {
+            events = this._events = this._events || {};
+            listeners = events[eventName] = events[eventName] || []; - 1 == listeners.indexOf(listener) && listeners.push(listener);
+            return this;
         }
-        // set events hash
-        var events = this._events = this._events || {};
-        // set listeners array
-        var listeners = events[eventName] = events[eventName] || [];
-        // only add once
-        if (listeners.indexOf(listener) == -1) {
-            listeners.push(listener);
-        }
-        return this;
     };
     proto.off = function (eventName, listener) {
-        var listeners = this._events && this._events[eventName];
-        if (!listeners || !listeners.length) {
-            return;
+        var index, listeners = this._events && this._events[eventName];
+        if (listeners && listeners.length) {
+            index = listeners.indexOf(listener); - 1 != index && listeners.splice(index, 1);
+            return this;
         }
-        var index = listeners.indexOf(listener);
-        if (index != -1) {
-            listeners.splice(index, 1);
-        }
-        return this;
     };
     proto.emitEvent = function (eventName, args) {
-        var listeners = this._events && this._events[eventName];
-        if (!listeners || !listeners.length) {
-            return;
-        }
-        var i = 0;
-        var listener = listeners[i];
-        args = args || [];
-        // once stuff
-        var onceListeners = this._onceEvents && this._onceEvents[eventName];
-        while (listener) {
-            var isOnce = onceListeners && onceListeners[listener];
-            if (isOnce) {
-                // remove listener
-                // remove before trigger to prevent recursion
-                this.off(eventName, listener);
-                // unset once flag
-                delete onceListeners[listener];
-            }
-            // trigger listener
-            listener.apply(this, args);
-            // get next listener
-            i += isOnce ? 0 : 1;
+        var i, listener, onceListeners, isOnce, listeners = this._events && this._events[eventName];
+        if (listeners && listeners.length) {
+            i = 0;
             listener = listeners[i];
+            args = args || [];
+            onceListeners = this._onceEvents && this._onceEvents[eventName];
+            for (; listener;) {
+                isOnce = onceListeners && onceListeners[listener];
+                if (isOnce) {
+                    this.off(eventName, listener);
+                    delete onceListeners[listener];
+                }
+                listener.apply(this, args);
+                i += isOnce ? 0 : 1;
+                listener = listeners[i];
+            }
+            return this;
         }
-        return this;
     };
     return EvEmitter;
 };
+
 window.EvEmitter();
-/*!
- * getSize v2.0.2
- * measure size of elements
- * MIT license
- */
-/*jshint browser: true, strict: true, undef: true, unused: true */
-/*global define: false, module: false, console: false */
-(function (window, factory) {
+
+! function (window, factory) {
     "use strict";
     window.getSize = factory();
-})(window, function () {
+}(window, function () {
     "use strict";
-    // -------------------------- helpers -------------------------- //
-    // get a number from a string, not a percentage
+    var measurements, measurementsLength;
+
     function getStyleSize(value) {
-        var num = parseFloat(value);
-        // not a percent like '100%', and a number
-        var isValid = value.indexOf("%") == -1 && !isNaN(num);
+        var num = parseFloat(value),
+            isValid = -1 == value.indexOf("%") && !isNaN(num);
         return isValid && num;
     }
 
     function noop() {}
-    var logError = typeof console == "undefined" ? noop : function (message) {
-        console.error(message);
-    };
-    // -------------------------- measurements -------------------------- //
-    var measurements = ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "marginLeft", "marginRight", "marginTop", "marginBottom", "borderLeftWidth", "borderRightWidth", "borderTopWidth", "borderBottomWidth"];
-    var measurementsLength = measurements.length;
+    measurements = ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "marginLeft", "marginRight", "marginTop", "marginBottom", "borderLeftWidth", "borderRightWidth", "borderTopWidth", "borderBottomWidth"];
+    measurementsLength = measurements.length;
 
-    function getZeroSize() {
-        var size = {
-            width: 0,
-            height: 0,
-            innerWidth: 0,
-            innerHeight: 0,
-            outerWidth: 0,
-            outerHeight: 0
-        };
-        for (var i = 0; i < measurementsLength; i++) {
-            var measurement = measurements[i];
-            size[measurement] = 0;
-        }
-        return size;
-    }
-    // -------------------------- getStyle -------------------------- //
-    /**
-     * getStyle, get style of element, check for Firefox bug
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=548397
-     */
-    function getStyle(elem) {
-        var style = getComputedStyle(elem);
-        if (!style) {
-            logError("Style returned " + style + ". Are you running this code in a hidden iframe on Firefox? " + "See http://bit.ly/getsizebug1");
-        }
-        return style;
-    }
-    // -------------------------- setup -------------------------- //
-    var isSetup = false;
-    var isBoxSizeOuter;
-    /**
-     * setup
-     * check isBoxSizerOuter
-     * do on first getSize() rather than on page load for Firefox bug
-     */
-    function setup() {
-        // setup once
-        if (isSetup) {
-            return;
-        }
-        isSetup = true;
-        // -------------------------- box sizing -------------------------- //
-        /**
-         * WebKit measures the outer-width on style.width on border-box elems
-         * IE & Firefox<29 measures the inner-width
-         */
-        var div = document.createElement("div");
-        div.style.width = "200px";
-        div.style.padding = "1px 2px 3px 4px";
-        div.style.borderStyle = "solid";
-        div.style.borderWidth = "1px 2px 3px 4px";
-        div.style.boxSizing = "border-box";
-        var body = document.body || document.documentElement;
-        body.appendChild(div);
-        var style = getStyle(div);
-        getSize.isBoxSizeOuter = isBoxSizeOuter = getStyleSize(style.width) == 200;
-        body.removeChild(div);
-    }
-    // -------------------------- getSize -------------------------- //
     function getSize(elem) {
-        setup();
-        // use querySeletor if elem is string
-        if (typeof elem == "string") {
-            elem = document.querySelector(elem);
+        var style, size, isBorderBox, i, measurement, value, num, paddingWidth, paddingHeight, marginWidth, marginHeight, borderWidth, borderHeight, isBorderBoxSizeOuter, styleWidth, styleHeight;
+        "string" == typeof elem && (elem = document.querySelector(elem));
+        if (elem && "object" == typeof elem && elem.nodeType) {
+            style = getComputedStyle(elem);
+            size = {};
+            size.width = elem.offsetWidth;
+            size.height = elem.offsetHeight;
+            isBorderBox = size.isBorderBox = "border-box" == style.boxSizing;
+            for (i = 0; measurementsLength > i; i++) {
+                measurement = measurements[i];
+                value = style[measurement];
+                num = parseFloat(value);
+                size[measurement] = isNaN(num) ? 0 : num;
+            }
+            paddingWidth = size.paddingLeft + size.paddingRight;
+            paddingHeight = size.paddingTop + size.paddingBottom;
+            marginWidth = size.marginLeft + size.marginRight;
+            marginHeight = size.marginTop + size.marginBottom;
+            borderWidth = size.borderLeftWidth + size.borderRightWidth;
+            borderHeight = size.borderTopWidth + size.borderBottomWidth;
+            isBorderBoxSizeOuter = isBorderBox;
+            styleWidth = getStyleSize(style.width);
+            styleWidth !== !1 && (size.width = styleWidth + (isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth));
+            styleHeight = getStyleSize(style.height);
+            styleHeight !== !1 && (size.height = styleHeight + (isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight));
+            size.innerWidth = size.width - (paddingWidth + borderWidth);
+            size.innerHeight = size.height - (paddingHeight + borderHeight);
+            size.outerWidth = size.width + marginWidth;
+            size.outerHeight = size.height + marginHeight;
+            return size;
         }
-        // do not proceed on non-objects
-        if (!elem || typeof elem != "object" || !elem.nodeType) {
-            return;
-        }
-        var style = getStyle(elem);
-        // if hidden, everything is 0
-        if (style.display == "none") {
-            return getZeroSize();
-        }
-        var size = {};
-        size.width = elem.offsetWidth;
-        size.height = elem.offsetHeight;
-        var isBorderBox = size.isBorderBox = style.boxSizing == "border-box";
-        // get all measurements
-        for (var i = 0; i < measurementsLength; i++) {
-            var measurement = measurements[i];
-            var value = style[measurement];
-            var num = parseFloat(value);
-            // any 'auto', 'medium' value will be 0
-            size[measurement] = !isNaN(num) ? num : 0;
-        }
-        var paddingWidth = size.paddingLeft + size.paddingRight;
-        var paddingHeight = size.paddingTop + size.paddingBottom;
-        var marginWidth = size.marginLeft + size.marginRight;
-        var marginHeight = size.marginTop + size.marginBottom;
-        var borderWidth = size.borderLeftWidth + size.borderRightWidth;
-        var borderHeight = size.borderTopWidth + size.borderBottomWidth;
-        var isBorderBoxSizeOuter = isBorderBox && isBoxSizeOuter;
-        // overwrite width and height if we can get it from style
-        var styleWidth = getStyleSize(style.width);
-        if (styleWidth !== false) {
-            size.width = styleWidth + ( // add padding and border unless it's already including it
-                isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth);
-        }
-        var styleHeight = getStyleSize(style.height);
-        if (styleHeight !== false) {
-            size.height = styleHeight + ( // add padding and border unless it's already including it
-                isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight);
-        }
-        size.innerWidth = size.width - (paddingWidth + borderWidth);
-        size.innerHeight = size.height - (paddingHeight + borderHeight);
-        size.outerWidth = size.width + marginWidth;
-        size.outerHeight = size.height + marginHeight;
-        return size;
     }
     return getSize;
 });
-/**
- * Fizzy UI utils v2.0.3
- * MIT license
- */
-/*jshint browser: true, undef: true, unused: true, strict: true */
-(function (window, factory) {
-    // universal module definition
-    /*jshint strict: false */
-    /*globals define, module, require */
+
+! function (window, factory) {
     window.fizzyUIUtils = factory(window);
-})(window, function factory(window) {
+}(window, function (window) {
     var utils = {};
-    // ----- extend ----- //
-    // extends objects
     utils.extend = function (a, b) {
-        for (var prop in b) {
-            a[prop] = b[prop];
-        }
+        for (var prop in b) a[prop] = b[prop];
         return a;
     };
-    // ----- makeArray ----- //
-    // turn element or nodeList into an array
     utils.makeArray = function (obj) {
-        var ary = [];
-        if (obj && typeof obj.length == "number") {
-            // convert nodeList to array
-            for (var i = 0; i < obj.length; i++) {
-                ary.push(obj[i]);
-            }
-        } else {
-            // array of single index
-            ary.push(obj);
-        }
+        var i, ary = [];
+        if (obj && "number" == typeof obj.length)
+            for (i = 0; i < obj.length; i++) ary.push(obj[i]);
+        else ary.push(obj);
         return ary;
     };
-    // ----- removeFrom ----- //
-    // ----- getQueryElement ----- //
-    // use element as selector string
     utils.getQueryElement = function (elem) {
-        if (typeof elem == "string") {
-            return document.querySelector(elem);
-        }
-        return elem;
+        return "string" == typeof elem ? document.querySelector(elem) : elem;
     };
-    // ----- handleEvent ----- //
-    // enable .ontype to trigger from .addEventListener( elem, 'type' )
     utils.handleEvent = function (event) {
-        var method = 'on' + event.type;
-        if (this[method]) {
-            this[method](event);
-        }
+        var method = "on" + event.type;
+        this[method] && this[method](event);
     };
-    // ----- filterFindElements ----- //
     utils.filterFindElements = function (elems, selector) {
-        // make array of elems
         elems = utils.makeArray(elems);
         var ffElems = [];
         elems.forEach(function (elem) {
-            // check that elem is an actual element
-            if (!(elem instanceof HTMLElement)) {
-                return;
-            }
-            // add elem if no selector
-            if (!selector) {
-                ffElems.push(elem);
-                return;
-            }
-            // filter & find items if we have a selector
-            // filter
-            ffElems.push(elem);
-            // find children
-            var childElems = elem.querySelectorAll(selector);
-            // concat childElems to filterFound array
-            for (var i = 0; i < childElems.length; i++) {
-                ffElems.push(childElems[i]);
-            }
+            var childElems, i;
+            if (elem instanceof HTMLElement)
+                if (selector) {
+                    ffElems.push(elem);
+                    childElems = elem.querySelectorAll(selector);
+                    for (i = 0; i < childElems.length; i++) ffElems.push(childElems[i]);
+                } else ffElems.push(elem);
         });
         return ffElems;
     };
-    // ----- htmlInit ----- //
-    /**
-     * allow user to initialize classes via [data-namespace] or .js-namespace class
-     * htmlInit( Widget, 'widgetName' )
-     * options are parsed from data-namespace-options
-     */
     utils.htmlInit = function (WidgetClass, namespace) {
         document.addEventListener("DOMContentLoaded", function () {
-            //var dashedNamespace = utils.toDashed(namespace);
-            var dataAttr = "data-" + namespace;
-            var dataAttrElems = document.querySelectorAll("[" + dataAttr + "]");
-            var jsDashElems = document.querySelectorAll(".js-" + namespace);
-            var elems = utils.makeArray(dataAttrElems).concat(utils.makeArray(jsDashElems));
-            var dataOptionsAttr = dataAttr + "-options";
-            var jQuery = window.jQuery;
+            var dataAttr = "data-" + namespace,
+                dataAttrElems = document.querySelectorAll("[" + dataAttr + "]"),
+                jsDashElems = document.querySelectorAll(".js-" + namespace),
+                elems = utils.makeArray(dataAttrElems).concat(utils.makeArray(jsDashElems)),
+                dataOptionsAttr = dataAttr + "-options";
+            //window.jQuery;
             elems.forEach(function (elem) {
-                var attr = elem.getAttribute(dataAttr) || elem.getAttribute(dataOptionsAttr);
-                var options;
-                options = attr && JSON.parse(attr);
-                // initialize
-                var instance = new WidgetClass(elem, options);
+                var attr = elem.getAttribute(dataAttr) || elem.getAttribute(dataOptionsAttr),
+                    options = attr && JSON.parse(attr);
+                new WidgetClass(elem, options);
             });
         });
     };
-    // -----  ----- //
     return utils;
 });
-/* --------------------------------------------- Flickity logic starts --------------------------------------- */
-// Flickity.Cell
-(function (window, factory) {
+
+
+// arnab
+var modularpattern = (function () {
+    // your module code goes here
+    makeArray1 = function (obj) {
+        var i, ary = [];
+        if (obj && "number" == typeof obj.length)
+            for (i = 0; i < obj.length; i++) ary.push(obj[i]);
+        else ary.push(obj);
+        return ary;
+    };
+
+
+    return {
+        add1: function (elems, selector) {
+            elems = makeArray1(elems);
+            var ffElems = [];
+            elems.forEach(function (elem) {
+                var childElems, i;
+                if (elem instanceof HTMLElement)
+                    if (selector) {
+                        ffElems.push(elem);
+                        childElems = elem.querySelectorAll(selector);
+                        for (i = 0; i < childElems.length; i++) ffElems.push(childElems[i]);
+                    } else ffElems.push(elem);
+            });
+            return ffElems;
+        }
+    }
+}());
+
+
+
+
+
+
+
+! function (window, factory) {
     window.Flickity = window.Flickity || {};
     window.Flickity.Cell = factory(window, window.getSize);
-})(window, function factory(window, getSize) {
+}(window, function (window, getSize) {
     function Cell(elem, parent) {
         this.element = elem;
         this.parent = parent;
@@ -336,7 +200,6 @@ window.EvEmitter();
         this.shift = 0;
     };
     proto.destroy = function () {
-        // reset style
         this.element.style.position = "";
         var side = this.parent.originSide;
         this.element.style[side] = "";
@@ -349,19 +212,14 @@ window.EvEmitter();
         this.updateTarget();
         this.renderPosition(x);
     };
-    // setDefaultTarget v1 method, backwards compatibility, remove in v3
     proto.updateTarget = proto.setDefaultTarget = function () {
-        var marginProperty = this.parent.originSide == "left" ? "marginLeft" : "marginRight";
+        var marginProperty = "left" == this.parent.originSide ? "marginLeft" : "marginRight";
         this.target = this.x + this.size[marginProperty] + this.size.width * this.parent.cellAlign;
     };
     proto.renderPosition = function (x) {
-        // render position of cell with in slider
         var side = this.parent.originSide;
-        this.element.style[side] = this.parent.getPositionValue(x);
+        this.element.style[side] = Math.round(x) + "px";
     };
-    /**
-     * @param {Integer} factor - 0, 1, or -1
-     **/
     proto.wrapShift = function (shift) {
         this.shift = shift;
         this.renderPosition(this.x + this.parent.slideableWidth * shift);
@@ -371,17 +229,15 @@ window.EvEmitter();
     };
     return Cell;
 });
-// slide
-(function (window, factory) {
-    // universal module definition
-    /* jshint strict: false */
+
+! function (window, factory) {
     window.Flickity.Slide = factory();
-})(window, function factory() {
+}(window, function () {
     "use strict";
 
     function Slide(parent) {
         this.parent = parent;
-        this.isOriginLeft = parent.originSide == "left";
+        this.isOriginLeft = "left" == parent.originSide;
         this.cells = [];
         this.outerWidth = 0;
         this.height = 0;
@@ -391,23 +247,18 @@ window.EvEmitter();
         this.cells.push(cell);
         this.outerWidth += cell.size.outerWidth;
         this.height = Math.max(cell.size.outerHeight, this.height);
-        // first cell stuff
-        if (this.cells.length == 1) {
+        if (1 == this.cells.length) {
             this.x = cell.x;
-            // x comes from first cell
             var beginMargin = this.isOriginLeft ? "marginLeft" : "marginRight";
             this.firstMargin = cell.size[beginMargin];
         }
     };
     proto.updateTarget = function () {
-        var endMargin = this.isOriginLeft ? "marginRight" : "marginLeft";
-        var lastCell = this.getLastCell();
-        var lastMargin = lastCell ? lastCell.size[endMargin] : 0;
-        var slideWidth = this.outerWidth - (this.firstMargin + lastMargin);
+        var endMargin = this.isOriginLeft ? "marginRight" : "marginLeft",
+            lastCell = this.cells[this.cells.length - 1],
+            lastMargin = lastCell ? lastCell.size[endMargin] : 0,
+            slideWidth = this.outerWidth - (this.firstMargin + lastMargin);
         this.target = this.x + this.firstMargin + slideWidth * this.parent.cellAlign;
-    };
-    proto.getLastCell = function () {
-        return this.cells[this.cells.length - 1];
     };
     proto.select = function () {
         this.changeSelectedClass("add");
@@ -427,447 +278,294 @@ window.EvEmitter();
     };
     return Slide;
 });
-// animate
-(function (window, factory) {
-    // universal module definition
-    /* jshint strict: false */
+
+! function (window, factory) {
     window.Flickity.animatePrototype = factory(window, window.fizzyUIUtils);
-})(window, function factory(window, utils) {
-    // -------------------------- requestAnimationFrame -------------------------- //
-    // get rAF, prefixed, if present
-    var requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
-    // fallback to setTimeout
-    var lastTime = 0;
-    if (!requestAnimationFrame) {
-        requestAnimationFrame = function (callback) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = setTimeout(callback, timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
-    }
-    // -------------------------- animate -------------------------- //
-    var proto = {};
+}(window, function (window, utils) {
+    var proto,
+        requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame,
+        lastTime = 0;
+    requestAnimationFrame || (requestAnimationFrame = function (callback) {
+        var currTime = new Date().getTime(),
+            timeToCall = Math.max(0, 16 - (currTime - lastTime)),
+            id = setTimeout(callback, timeToCall);
+        lastTime = currTime + timeToCall;
+        return id;
+    });
+    proto = {};
     proto.startAnimation = function () {
-        if (this.isAnimating) {
-            return;
+        if (!this.isAnimating) {
+            this.isAnimating = !0;
+            this.restingFrames = 0;
+            this.animate();
         }
-        this.isAnimating = true;
-        this.restingFrames = 0;
-        this.animate();
     };
     proto.animate = function () {
+        var previousX, _this;
         this.applyDragForce();
         this.applySelectedAttraction();
-        var previousX = this.x;
+        previousX = this.x;
         this.integratePhysics();
         this.positionSlider();
         this.settle(previousX);
-        // animate next frame
         if (this.isAnimating) {
-            var _this = this;
-            requestAnimationFrame(function animateFrame() {
+            _this = this;
+            requestAnimationFrame(function () {
                 _this.animate();
             });
         }
     };
-    var transformProperty = function () {
-        var style = document.documentElement.style;
-        if (typeof style.transform == "string") {
-            return "transform";
-        }
-        return "WebkitTransform";
-    }();
     proto.positionSlider = function () {
-        var x = this.x;
-        // wrap position around
-        if (this.options.wrapAround && this.cells.length > 1) {
-            x = (x % this.slideableWidth + this.slideableWidth) % this.slideableWidth;
-            x = x - this.slideableWidth;
-            this.shiftWrapCells(x);
-        }
-        x = x + this.cursorPosition;
-        // reverse if right-to-left and using transform
-        x = this.options.rightToLeft && transformProperty ? -x : x;
-        var value = this.getPositionValue(x);
-        // use 3D tranforms for hardware acceleration on iOS
-        // but use 2D when settled, for better font-rendering
-        this.slider.style[transformProperty] = this.isAnimating ? "translate3d(" + value + ",0,0)" : "translateX(" + value + ")";
-        // scroll event
-        var firstSlide = this.slides[0];
+        var value, firstSlide, positionX, progress, x = this.x;
+        x += this.cursorPosition;
+        x = this.options.rightToLeft && "transform" ? -x : x;
+        value = Math.round(x) + "px";
+        this.slider.style["transform"] = this.isAnimating ? "translate3d(" + value + ",0,0)" : "translateX(" + value + ")";
+        firstSlide = this.slides[0];
         if (firstSlide) {
-            var positionX = -this.x - firstSlide.target;
-            var progress = positionX / this.slidesWidth;
+            positionX = -this.x - firstSlide.target;
+            progress = positionX / this.slidesWidth;
             this.dispatchEvent("scroll", null, [progress, positionX]);
         }
     };
     proto.positionSliderAtSelected = function () {
-        if (!this.cells.length) {
-            return;
-        }
-        this.x = -this.selectedSlide.target;
-        this.positionSlider();
-    };
-    proto.getPositionValue = function (position) {
-        if (this.options.percentPosition) {
-            // percent position, round to 2 digits, like 12.34%
-            return Math.round(position / this.size.innerWidth * 1e4) * .01 + "%";
-        } else {
-            // pixel positioning
-            return Math.round(position) + "px";
+        if (this.cells.length) {
+            this.x = -this.selectedSlide.target;
+            this.positionSlider();
         }
     };
     proto.settle = function (previousX) {
-        // keep track of frames where x hasn't moved
-        if (!this.isPointerDown && Math.round(this.x * 100) == Math.round(previousX * 100)) {
-            this.restingFrames++;
-        }
-        // stop animating if resting for 3 or more frames
+        this.isPointerDown || Math.round(100 * this.x) != Math.round(100 * previousX) || this.restingFrames++;
         if (this.restingFrames > 2) {
-            this.isAnimating = false;
+            this.isAnimating = !1;
             delete this.isFreeScrolling;
-            // render position with translateX when settled
             this.positionSlider();
             this.dispatchEvent("settle");
         }
     };
     proto.shiftWrapCells = function (x) {
-        // shift before cells
-        var beforeGap = this.cursorPosition + x;
+        var afterGap, beforeGap = this.cursorPosition + x;
         this._shiftCells(this.beforeShiftCells, beforeGap, -1);
-        // shift after cells
-        var afterGap = this.size.innerWidth - (x + this.slideableWidth + this.cursorPosition);
+        afterGap = this.size.innerWidth - (x + this.slideableWidth + this.cursorPosition);
         this._shiftCells(this.afterShiftCells, afterGap, 1);
     };
     proto._shiftCells = function (cells, gap, shift) {
-        for (var i = 0; i < cells.length; i++) {
-            var cell = cells[i];
-            var cellShift = gap > 0 ? shift : 0;
+        var i, cell, cellShift;
+        for (i = 0; i < cells.length; i++) {
+            cell = cells[i];
+            cellShift = gap > 0 ? shift : 0;
             cell.wrapShift(cellShift);
             gap -= cell.size.outerWidth;
         }
     };
     proto._unshiftCells = function (cells) {
-        if (!cells || !cells.length) {
-            return;
-        }
-        for (var i = 0; i < cells.length; i++) {
-            cells[i].wrapShift(0);
-        }
+        if (cells && cells.length)
+            for (var i = 0; i < cells.length; i++) cells[i].wrapShift(0);
     };
-    // -------------------------- physics -------------------------- //
     proto.integratePhysics = function () {
         this.x += this.velocity;
-        this.velocity *= this.getFrictionFactor();
+        this.velocity *= 0.8;
     };
     proto.applyForce = function (force) {
         this.velocity += force;
     };
-    proto.getFrictionFactor = function () {
-        return 1 - this.options[this.isFreeScrolling ? "freeScrollFriction" : "friction"];
-    };
     proto.getRestingPosition = function () {
-        // my thanks to Steven Wittens, who simplified this math greatly
-        return this.x + this.velocity / (1 - this.getFrictionFactor());
+        return this.x + this.velocity / 0.2;
     };
     proto.applyDragForce = function () {
-        if (!this.isPointerDown) {
-            return;
+        var dragVelocity, dragForce;
+        if (this.isPointerDown) {
+            dragVelocity = this.dragX - this.x;
+            dragForce = dragVelocity - this.velocity;
+            this.applyForce(dragForce);
         }
-        // change the position to drag position by applying force
-        var dragVelocity = this.dragX - this.x;
-        var dragForce = dragVelocity - this.velocity;
-        this.applyForce(dragForce);
     };
     proto.applySelectedAttraction = function () {
-        // do not attract if pointer down or no cells
-        if (this.isPointerDown || this.isFreeScrolling || !this.cells.length) {
-            return;
+        var distance, force;
+        if (!this.isPointerDown && !this.isFreeScrolling && this.cells.length) {
+            distance = -1 * this.selectedSlide.target - this.x;
+            force = distance * this.options.selectedAttraction;
+            this.applyForce(force);
         }
-        var distance = this.selectedSlide.target * -1 - this.x;
-        var force = distance * this.options.selectedAttraction;
-        this.applyForce(force);
     };
     return proto;
 });
-// Flickity main
-(function (window, factory) {
-    // universal module definition
-    /* jshint strict: false */
+
+! function (window, factory) {
     var _Flickity = window.Flickity;
     window.Flickity = factory(window, window.EvEmitter, window.getSize, window.fizzyUIUtils, _Flickity.Cell, _Flickity.Slide, _Flickity.animatePrototype);
-})(window, function factory(window, EvEmitter, getSize, utils, Cell, Slide, animatePrototype) {
-    // vars
-    var jQuery = window.jQuery;
-    var getComputedStyle = window.getComputedStyle;
-    var console = window.console;
+}(window, function (window, EvEmitter, getSize, utils, Cell, Slide, animatePrototype) {
+    var GUID, instances, proto, cellAlignShorthands, jQuery = window.jQuery;
+    window.getComputedStyle, window.console;
 
     function moveElements(elems, toElem) {
         elems = utils.makeArray(elems);
-        while (elems.length) {
-            toElem.appendChild(elems.shift());
-        }
+        for (; elems.length;) toElem.appendChild(elems.shift());
     }
-    // -------------------------- Flickity -------------------------- //
-    // globally unique identifiers
-    var GUID = 0;
-    // internal store of all Flickity intances
-    var instances = {};
+    GUID = 0;
+    instances = {};
 
     function Flickity(element, options) {
-        var queryElement = utils.getQueryElement(element);
+        var instance, queryElement = utils.getQueryElement(element);
         this.element = queryElement;
-        // do not initialize twice on same element
         if (this.element.flickityGUID) {
-            var instance = instances[this.element.flickityGUID];
+            instance = instances[this.element.flickityGUID];
             instance.option(options);
             return instance;
         }
-        // add jQuery
-        if (jQuery) {
-            this.$element = jQuery(this.element);
-        }
-        // options
+        jQuery && (this.$element = jQuery(this.element));
         this.options = utils.extend({}, this.constructor.defaults);
         this.option(options);
-        // kick things off
         this._create();
     }
     Flickity.defaults = {
-        accessibility: true,
-        // adaptiveHeight: false,
+        accessibility: !0,
         cellAlign: "center",
-        // cellSelector: undefined,
-        // contain: false,
-        freeScrollFriction: .075,
-        // friction when free-scrolling
-        friction: .28,
-        // friction when selecting
-        namespaceJQueryEvents: true,
-        // initialIndex: 0,
-        percentPosition: true,
-        resize: true,
+        resize: !0,
         selectedAttraction: .025,
-        setGallerySize: true
+        setGallerySize: !0
     };
-    // hash of methods triggered on _create()
     Flickity.createMethods = [];
-    var proto = Flickity.prototype;
-    // inherit EventEmitter
+    proto = Flickity.prototype;
     utils.extend(proto, EvEmitter.prototype);
     proto._create = function () {
-        // add id for Flickity.data
         var id = this.guid = ++GUID;
         this.element.flickityGUID = id;
-        // expando
         instances[id] = this;
-        // associate via id
-        // initial properties
         this.selectedIndex = 0;
-        // how many frames slider has been in same position
         this.restingFrames = 0;
-        // initial physics properties
         this.x = 0;
         this.velocity = 0;
         this.originSide = this.options.rightToLeft ? "right" : "left";
-        // create viewport & slider
         this.viewport = document.createElement("div");
         this.viewport.className = "flickity-viewport";
         this._createSlider();
-        if (this.options.resize) {
-            window.addEventListener("resize", this);
-        }
+        this.options.resize && window.addEventListener("resize", this);
         Flickity.createMethods.forEach(function (method) {
             this[method]();
         }, this);
         this.activate();
     };
-    /**
-     * set options
-     * @param {Object} opts
-     */
     proto.option = function (opts) {
         utils.extend(this.options, opts);
     };
     proto.activate = function () {
-        if (this.isActive) {
-            return;
+        var cellElems, index, initialIndex;
+        if (!this.isActive) {
+            this.isActive = !0;
+            this.element.classList.add("flickity-enabled");
+            this.options.rightToLeft && this.element.classList.add("flickity-rtl");
+            this.getSize();
+            cellElems = this._filterFindCellElements(this.element.children);
+            moveElements(cellElems, this.slider);
+            this.viewport.appendChild(this.slider);
+            this.element.appendChild(this.viewport);
+            this.cells = this._makeCells(this.slider.children);
+        this.positionCells();
+        this._getWrapShiftCells();
+        this.setGallerySize();
+            if (this.options.accessibility) {
+                this.element.tabIndex = 0;
+                this.element.addEventListener("keydown", this);
+            }
+            this.emitEvent("activate");
+            initialIndex = this.options.initialIndex;
+            index = this.isInitActivated ? this.selectedIndex : void 0 !== initialIndex && this.cells[initialIndex] ? initialIndex : 0;
+            this.select(index, !1, !0);
+            this.isInitActivated = !0;
         }
-        this.isActive = true;
-        this.element.classList.add("flickity-enabled");
-        if (this.options.rightToLeft) {
-            this.element.classList.add("flickity-rtl");
-        }
-        this.getSize();
-        // move initial cell elements so they can be loaded as cells
-        var cellElems = this._filterFindCellElements(this.element.children);
-        moveElements(cellElems, this.slider);
-        this.viewport.appendChild(this.slider);
-        this.element.appendChild(this.viewport);
-        // get cells from children
-        this.reloadCells();
-        if (this.options.accessibility) {
-            // allow element to focusable
-            this.element.tabIndex = 0;
-            // listen for key presses
-            this.element.addEventListener("keydown", this);
-        }
-        this.emitEvent("activate");
-        var index;
-        var initialIndex = this.options.initialIndex;
-        if (this.isInitActivated) {
-            index = this.selectedIndex;
-        } else if (initialIndex !== undefined) {
-            index = this.cells[initialIndex] ? initialIndex : 0;
-        } else {
-            index = 0;
-        }
-        // select instantly
-        this.select(index, false, true);
-        // flag for initial activation, for using initialIndex
-        this.isInitActivated = true;
     };
-    // slider positions the cells
     proto._createSlider = function () {
-        // slider element does all the positioning
         var slider = document.createElement("div");
         slider.className = "flickity-slider";
         slider.style[this.originSide] = 0;
         this.slider = slider;
     };
     proto._filterFindCellElements = function (elems) {
-        return utils.filterFindElements(elems, this.options.cellSelector);
+        return modularpattern.add1(elems, this.options.cellSelector);
     };
-    // goes through all children
-    proto.reloadCells = function () {
-        // collection of item elements
-        this.cells = this._makeCells(this.slider.children);
-        this.positionCells();
-        this._getWrapShiftCells();
-        this.setGallerySize();
-    };
-    /**
-     * turn elements into Flickity.Cells
-     * @param {Array or NodeList or HTMLElement} elems
-     * @returns {Array} items - collection of new Flickity Cells
-     */
     proto._makeCells = function (elems) {
-        var cellElems = this._filterFindCellElements(elems);
-        // create new Flickity for collection
-        var cells = cellElems.map(function (cellElem) {
-            return new Cell(cellElem, this);
-        }, this);
+        var cellElems = this._filterFindCellElements(elems),
+            cells = cellElems.map(function (cellElem) {
+                return new Cell(cellElem, this);
+            }, this);
         return cells;
-    };
-    proto.getLastCell = function () {
-        return this.cells[this.cells.length - 1];
     };
     proto.getLastSlide = function () {
         return this.slides[this.slides.length - 1];
     };
-    // positions all cells
     proto.positionCells = function () {
-        // size all cells
         this._sizeCells(this.cells);
-        // position all cells
         this._positionCells(0);
     };
-    /**
-     * position certain cells
-     * @param {Integer} index - which cell to start with
-     */
     proto._positionCells = function (index) {
+        var cellX, startCell, len, i, cell;
         index = index || 0;
-        // also measure maxCellHeight
-        // start 0 if positioning all cells
         this.maxCellHeight = index ? this.maxCellHeight || 0 : 0;
-        var cellX = 0;
-        // get cellX
+        cellX = 0;
         if (index > 0) {
-            var startCell = this.cells[index - 1];
+            startCell = this.cells[index - 1];
             cellX = startCell.x + startCell.size.outerWidth;
         }
-        var len = this.cells.length;
-        for (var i = index; i < len; i++) {
-            var cell = this.cells[i];
+        len = this.cells.length;
+        for (i = index; len > i; i++) {
+            cell = this.cells[i];
             cell.setPosition(cellX);
             cellX += cell.size.outerWidth;
             this.maxCellHeight = Math.max(cell.size.outerHeight, this.maxCellHeight);
         }
-        // keep track of cellX for wrap-around
         this.slideableWidth = cellX;
-        // slides
         this.updateSlides();
-        // contain slides target
         this._containSlides();
-        // update slidesWidth
         this.slidesWidth = len ? this.getLastSlide().target - this.slides[0].target : 0;
     };
-    /**
-     * cell.getSize() on multiple cells
-     * @param {Array} cells
-     */
     proto._sizeCells = function (cells) {
         cells.forEach(function (cell) {
             cell.getSize();
         });
     };
-    // --------------------------  -------------------------- //
     proto.updateSlides = function () {
+        var slide, isOriginLeft, nextMargin, canCellFit;
         this.slides = [];
-        if (!this.cells.length) {
-            return;
+        if (this.cells.length) {
+            slide = new Slide(this);
+            this.slides.push(slide);
+            isOriginLeft = "left" == this.originSide;
+            nextMargin = isOriginLeft ? "marginRight" : "marginLeft";
+            canCellFit = this._getCanCellFit();
+            this.cells.forEach(function (cell, i) {
+                if (slide.cells.length) {
+                    var slideWidth = slide.outerWidth - slide.firstMargin + (cell.size.outerWidth - cell.size[nextMargin]);
+                    if (canCellFit.call(this, i, slideWidth)) slide.addCell(cell);
+                    else {
+                        slide.updateTarget();
+                        slide = new Slide(this);
+                        this.slides.push(slide);
+                        slide.addCell(cell);
+                    }
+                } else slide.addCell(cell);
+            }, this);
+            slide.updateTarget();
+            this.updateSelectedSlide();
         }
-        var slide = new Slide(this);
-        this.slides.push(slide);
-        var isOriginLeft = this.originSide == "left";
-        var nextMargin = isOriginLeft ? "marginRight" : "marginLeft";
-        var canCellFit = this._getCanCellFit();
-        this.cells.forEach(function (cell, i) {
-            // just add cell if first cell in slide
-            if (!slide.cells.length) {
-                slide.addCell(cell);
-                return;
-            }
-            var slideWidth = slide.outerWidth - slide.firstMargin + (cell.size.outerWidth - cell.size[nextMargin]);
-            if (canCellFit.call(this, i, slideWidth)) {
-                slide.addCell(cell);
-            } else {
-                // doesn't fit, new slide
-                slide.updateTarget();
-                slide = new Slide(this);
-                this.slides.push(slide);
-                slide.addCell(cell);
-            }
-        }, this);
-        // last slide
-        slide.updateTarget();
-        // update .selectedSlide
-        this.updateSelectedSlide();
     };
     proto._getCanCellFit = function () {
-        var groupCells = this.options.groupCells;
-        if (!groupCells) {
-            return function () {
-                return false;
-            };
-        } else if (typeof groupCells == "number") {
-            // group by number. 3 -> [0,1,2], [3,4,5], ...
-            var number = parseInt(groupCells, 10);
+        var number, percentMatch, percent, groupCells = this.options.groupCells;
+        if (!groupCells) return function () {
+            return !1;
+        };
+        if ("number" == typeof groupCells) {
+            number = parseInt(groupCells, 10);
             return function (i) {
                 return i % number !== 0;
             };
         }
-        // default, group by width of slide
-        // parse '75%
-        var percentMatch = typeof groupCells == "string" && groupCells.match(/^(\d+)%$/);
-        var percent = percentMatch ? parseInt(percentMatch[1], 10) / 100 : 1;
+        percentMatch = "string" == typeof groupCells && groupCells.match(/^(\d+)%$/);
+        percent = percentMatch ? parseInt(percentMatch[1], 10) / 100 : 1;
         return function (i, slideWidth) {
             return slideWidth <= (this.size.innerWidth + 1) * percent;
         };
     };
-    // alias _init for jQuery plugin .flickity()
     proto._init = proto.reposition = function () {
         this.positionCells();
         this.positionSliderAtSelected();
@@ -877,8 +575,7 @@ window.EvEmitter();
         this.setCellAlign();
         this.cursorPosition = this.size.innerWidth * this.cellAlign;
     };
-    var cellAlignShorthands = {
-        // cell align, then based on origin side
+    cellAlignShorthands = {
         center: {
             left: .5,
             right: .5
@@ -903,326 +600,167 @@ window.EvEmitter();
         }
     };
     proto._getWrapShiftCells = function () {
-        // only for wrap-around
-        if (!this.options.wrapAround) {
-            return;
-        }
-        // unshift previous cells
-        this._unshiftCells(this.beforeShiftCells);
-        this._unshiftCells(this.afterShiftCells);
-        // get before cells
-        // initial gap
-        var gapX = this.cursorPosition;
-        var cellIndex = this.cells.length - 1;
-        this.beforeShiftCells = this._getGapCells(gapX, cellIndex, -1);
-        // get after cells
-        // ending gap between last cell and end of gallery viewport
-        gapX = this.size.innerWidth - this.cursorPosition;
-        // start cloning at first cell, working forwards
-        this.afterShiftCells = this._getGapCells(gapX, 0, 1);
+        var gapX, cellIndex;
     };
     proto._getGapCells = function (gapX, cellIndex, increment) {
-        // keep adding cells until the cover the initial gap
-        var cells = [];
-        while (gapX > 0) {
-            var cell = this.cells[cellIndex];
-            if (!cell) {
-                break;
-            }
+        for (var cell, cells = []; gapX > 0;) {
+            cell = this.cells[cellIndex];
+            if (!cell) break;
             cells.push(cell);
             cellIndex += increment;
             gapX -= cell.size.outerWidth;
         }
         return cells;
     };
-    // ----- contain ----- //
-    // contain cell targets so no excess sliding
     proto._containSlides = function () {
-        if (!this.options.contain || this.options.wrapAround || !this.cells.length) {
-            return;
+        var isRightToLeft, beginMargin, endMargin, contentWidth, isContentSmaller, beginBound, endBound;
+        if (this.options.contain && this.cells.length) {
+            isRightToLeft = this.options.rightToLeft;
+            beginMargin = isRightToLeft ? "marginRight" : "marginLeft";
+            endMargin = isRightToLeft ? "marginLeft" : "marginRight";
+            contentWidth = this.slideableWidth - this.cells[this.cells.length - 1].size[endMargin];
+
+
+            isContentSmaller = contentWidth < this.element.offsetWidth;
+            beginBound = this.cursorPosition + this.cells[0].size[beginMargin];
+            endBound = contentWidth - this.element.offsetWidth * (1 - this.cellAlign);
+            this.slides.forEach(function (slide) {
+                if (isContentSmaller) slide.target = contentWidth * this.cellAlign;
+                else {
+                    slide.target = Math.max(slide.target, beginBound);
+                    slide.target = Math.min(slide.target, endBound);
+                }
+            }, this);
         }
-        var isRightToLeft = this.options.rightToLeft;
-        var beginMargin = isRightToLeft ? "marginRight" : "marginLeft";
-        var endMargin = isRightToLeft ? "marginLeft" : "marginRight";
-        var contentWidth = this.slideableWidth - this.getLastCell().size[endMargin];
-        // content is less than gallery size
-        var isContentSmaller = contentWidth < this.size.innerWidth;
-        // bounds
-        var beginBound = this.cursorPosition + this.cells[0].size[beginMargin];
-        var endBound = contentWidth - this.size.innerWidth * (1 - this.cellAlign);
-        // contain each cell target
-        this.slides.forEach(function (slide) {
-            if (isContentSmaller) {
-                // all cells fit inside gallery
-                slide.target = contentWidth * this.cellAlign;
-            } else {
-                // contain to bounds
-                slide.target = Math.max(slide.target, beginBound);
-                slide.target = Math.min(slide.target, endBound);
-            }
-        }, this);
     };
-    // -----  ----- //
-    /**
-     * emits events via eventEmitter and jQuery events
-     * @param {String} type - name of event
-     * @param {Event} event - original event
-     * @param {Array} args - extra arguments
-     */
     proto.dispatchEvent = function (type, event, args) {
         var emitArgs = event ? [event].concat(args) : args;
         this.emitEvent(type, emitArgs);
     };
-    // -------------------------- select -------------------------- //
-    /**
-     * @param {Integer} index - index of the slide
-     * @param {Boolean} isWrap - will wrap-around to last/first if at the end
-     * @param {Boolean} isInstant - will immediately set position at selected cell
-     */
-    proto.select = function (index, isWrap, isInstant) {
-        if (!this.isActive) {
-            return;
-        }
-        index = parseInt(index, 10);
-        this._wrapSelect(index);
-        if (this.options.wrapAround || isWrap) {
-            index = (index % this.slides.length + this.slides.length) % this.slides.length;
-        }
-        // bail if invalid index
-        if (!this.slides[index]) {
-            return;
-        }
-        this.selectedIndex = index;
-        this.updateSelectedSlide();
-        if (isInstant) {
-            this.positionSliderAtSelected();
-        } else {
-            this.startAnimation();
-        }
-        if (this.options.adaptiveHeight) {
-            this.setGallerySize();
-        }
-        this.dispatchEvent("select");
-        // old v1 event name, remove in v3
-        this.dispatchEvent("cellSelect");
-    };
-    // wraps position for wrapAround, to move to closest slide. #113
-    proto._wrapSelect = function (index) {
-        var len = this.slides.length;
-        var isWrapping = this.options.wrapAround && len > 1;
-        if (!isWrapping) {
-            return index;
-        }
-        var wrapIndex = (index % len + len) % len;
-        // go to shortest
-        var delta = Math.abs(wrapIndex - this.selectedIndex);
-        var backWrapDelta = Math.abs(wrapIndex + len - this.selectedIndex);
-        var forewardWrapDelta = Math.abs(wrapIndex - len - this.selectedIndex);
-        if (!this.isDragSelect && backWrapDelta < delta) {
-            index += len;
-        } else if (!this.isDragSelect && forewardWrapDelta < delta) {
-            index -= len;
-        }
-        // wrap position so slider is within normal area
-        if (index < 0) {
-            this.x -= this.slideableWidth;
-        } else if (index >= len) {
-            this.x += this.slideableWidth;
+    proto.select = function (index) {
+        if (this.isActive) {
+            index = parseInt(index, 10);
+            if (this.slides[index]) {
+                this.selectedIndex = index;
+                this.updateSelectedSlide();
+                this.startAnimation();
+                this.options.adaptiveHeight && this.setGallerySize();
+                this.dispatchEvent("select");
+                this.dispatchEvent("cellSelect");
+            }
         }
     };
-    proto.previous = function (isWrap, isInstant) {
-        this.select(this.selectedIndex - 1, isWrap, isInstant);
+    proto.previous = function () {
+        this.select(this.selectedIndex - 1);
     };
-    proto.next = function (isWrap, isInstant) {
-        this.select(this.selectedIndex + 1, isWrap, isInstant);
+    proto.next = function () {
+        this.select(this.selectedIndex + 1);
     };
     proto.updateSelectedSlide = function () {
         var slide = this.slides[this.selectedIndex];
-        // selectedIndex could be outside of slides, if triggered before resize()
-        if (!slide) {
-            return;
+        if (slide) {
+            this.unselectSelectedSlide();
+            this.selectedSlide = slide;
+            slide.select();
+            this.selectedCells = slide.cells;
+            this.selectedElements = slide.getCellElements();
+            this.selectedCell = slide.cells[0];
+            this.selectedElement = this.selectedElements[0];
         }
-        // unselect previous selected slide
-        this.unselectSelectedSlide();
-        // update new selected slide
-        this.selectedSlide = slide;
-        slide.select();
-        this.selectedCells = slide.cells;
-        this.selectedElements = slide.getCellElements();
-        // HACK: selectedCell & selectedElement is first cell in slide, backwards compatibility
-        // Remove in v3?
-        this.selectedCell = slide.cells[0];
-        this.selectedElement = this.selectedElements[0];
     };
     proto.unselectSelectedSlide = function () {
-        if (this.selectedSlide) {
-            this.selectedSlide.unselect();
-        }
+        this.selectedSlide && this.selectedSlide.changeSelectedClass("remove");
     };
-    /**
-     * select slide from number or cell element
-     * @param {Element or Number} elem
-     */
-    proto.selectCell = function (value, isWrap, isInstant) {
-        // get cell
-        var cell;
-        if (typeof value == "number") {
-            cell = this.cells[value];
-        } else {
-            // use string as selector
-            if (typeof value == "string") {
-                value = this.element.querySelector(value);
-            }
-            // get cell from element
+    proto.selectCell = function (value) {
+        var cell, i, slide, index;
+        if ("number" == typeof value) cell = this.cells[value];
+        else {
+            "string" == typeof value && (value = this.element.querySelector(value));
             cell = this.getCell(value);
         }
-        // select slide that has cell
-        for (var i = 0; cell && i < this.slides.length; i++) {
-            var slide = this.slides[i];
-            var index = slide.cells.indexOf(cell);
-            if (index != -1) {
-                this.select(i, isWrap, isInstant);
+        for (i = 0; cell && i < this.slides.length; i++) {
+            slide = this.slides[i];
+            index = slide.cells.indexOf(cell);
+            if (-1 != index) {
+                this.select(i);
                 return;
             }
         }
     };
-    // -------------------------- get cells -------------------------- //
-    /**
-     * get Flickity.Cell, given an Element
-     * @param {Element} elem
-     * @returns {Flickity.Cell} item
-     */
     proto.getCell = function (elem) {
-        // loop through cells to get the one that matches
-        for (var i = 0; i < this.cells.length; i++) {
-            var cell = this.cells[i];
-            if (cell.element == elem) {
-                return cell;
-            }
+        var i, cell;
+        for (i = 0; i < this.cells.length; i++) {
+            cell = this.cells[i];
+            if (cell.element == elem) return cell;
         }
     };
-    /**
-     * get collection of Flickity.Cells, given Elements
-     * @param {Element, Array, NodeList} elems
-     * @returns {Array} cells - Flickity.Cells
-     */
     proto.getCells = function (elems) {
         elems = utils.makeArray(elems);
         var cells = [];
         elems.forEach(function (elem) {
             var cell = this.getCell(elem);
-            if (cell) {
-                cells.push(cell);
-            }
+            cell && cells.push(cell);
         }, this);
         return cells;
     };
-    /**
-     * get cell elements
-     * @returns {Array} cellElems
-     */
-    proto.getCellElements = function () {
-        return this.cells.map(function (cell) {
-            return cell.element;
-        });
-    };
-    /**
-     * get parent cell from an element
-     * @param {Element} elem
-     * @returns {Flickit.Cell} cell
-     */
     proto.getParentCell = function (elem) {
-        // first check if elem is cell
         var cell = this.getCell(elem);
-        if (cell) {
-            return cell;
-        }
-        // try to get parent cell elem
-        return this.getCell(elem.parentNode);
+        return cell ? cell : this.getCell(elem.parentNode);
     };
-    // -------------------------- events -------------------------- //
     proto.childUIPointerDown = function (event) {
         this.emitEvent("childUIPointerDown", [event]);
     };
     proto.resize = function () {
-        if (!this.isActive) {
-            return;
+        if (this.isActive) {
+            this.getSize();
+            this.positionCells();
+            this._getWrapShiftCells();
+            this.setGallerySize();
+            this.emitEvent("resize");
+            var selectedElement = this.selectedElements && this.selectedElements[0];
+            this.selectCell(selectedElement, !1, !0);
         }
-        this.getSize();
-        // wrap values
-        if (this.options.wrapAround) {
-            this.x = (this.x % this.slideableWidth + this.slideableWidth) % this.slideableWidth;
-        }
-        this.positionCells();
-        this._getWrapShiftCells();
-        this.setGallerySize();
-        this.emitEvent("resize");
-        // update selected index for group slides, instant
-        // TODO: position can be lost between groups of various numbers
-        var selectedElement = this.selectedElements && this.selectedElements[0];
-        this.selectCell(selectedElement, false, true);
     };
-    // ----- keydown ----- //
-    // go previous/next if left/right keys pressed
     proto.onkeydown = function (event) {
-        // only work if element is in focus
-        if (!this.options.accessibility || document.activeElement && document.activeElement != this.element) {
-            return;
-        }
-        if (event.keyCode == 37) {
-            // go left
-            var leftMethod = this.options.rightToLeft ? "next" : "previous";
-            this.emitEvent("uiChange");
-            this[leftMethod]();
-        } else if (event.keyCode == 39) {
-            // go right
-            var rightMethod = this.options.rightToLeft ? "previous" : "next";
+        var leftMethod, rightMethod;
+        if (this.options.accessibility && (!document.activeElement || document.activeElement == this.element))
+            if (37 == event.keyCode) {
+                leftMethod = this.options.rightToLeft ? "next" : "previous";
+                this.emitEvent("uiChange");
+                this[leftMethod]();
+            } else if (39 == event.keyCode) {
+            rightMethod = this.options.rightToLeft ? "previous" : "next";
             this.emitEvent("uiChange");
             this[rightMethod]();
         }
     };
-    // -------------------------- destroy -------------------------- //
-    // deactivate all Flickity functionality, but keep stuff available
     proto.deactivate = function () {
-        if (!this.isActive) {
-            return;
+        if (this.isActive) {
+            this.element.classList.remove("flickity-enabled");
+            this.element.classList.remove("flickity-rtl");
+            this.cells.forEach(function (cell) {
+                cell.destroy();
+            });
+            this.unselectSelectedSlide();
+            this.element.removeChild(this.viewport);
+            moveElements(this.slider.children, this.element);
+            if (this.options.accessibility) {
+                this.element.removeAttribute("tabIndex");
+                this.element.removeEventListener("keydown", this);
+            }
+            this.isActive = !1;
+            this.emitEvent("deactivate");
         }
-        this.element.classList.remove("flickity-enabled");
-        this.element.classList.remove("flickity-rtl");
-        // destroy cells
-        this.cells.forEach(function (cell) {
-            cell.destroy();
-        });
-        this.unselectSelectedSlide();
-        this.element.removeChild(this.viewport);
-        // move child elements back into element
-        moveElements(this.slider.children, this.element);
-        if (this.options.accessibility) {
-            this.element.removeAttribute("tabIndex");
-            this.element.removeEventListener("keydown", this);
-        }
-        // set flags
-        this.isActive = false;
-        this.emitEvent("deactivate");
     };
     proto.destroy = function () {
         this.deactivate();
         window.removeEventListener("resize", this);
         this.emitEvent("destroy");
-        if (jQuery && this.$element) {
-            jQuery.removeData(this.element, "flickity");
-        }
+        jQuery && this.$element && jQuery.removeData(this.element, "flickity");
         delete this.element.flickityGUID;
         delete instances[this.guid];
     };
-    // -------------------------- prototype -------------------------- //
     utils.extend(proto, animatePrototype);
-    // -------------------------- extras -------------------------- //
-    /**
-     * get Flickity instance from element
-     * @param {Element} elem
-     * @returns {Flickity}
-     */
     Flickity.data = function (elem) {
         elem = utils.getQueryElement(elem);
         var id = elem && elem.flickityGUID;
@@ -1232,350 +770,198 @@ window.EvEmitter();
     Flickity.Cell = Cell;
     return Flickity;
 });
-/* --------------------------------------------- Flickity logic ends --------------------------------------- */
-/*!
- * Unipointer v2.1.0
- * base class for doing one thing with pointer event
- * MIT license
- */
-/*jshint browser: true, undef: true, unused: true, strict: true */
-(function (window, factory) {
-    // universal module definition
-    // browser global
+
+! function (window, factory) {
     window.Unipointer = factory(window, window.EvEmitter);
-})(window, function factory(window, EvEmitter) {
+}(window, function (window, EvEmitter) {
+    var proto, postStartEvents;
+
     function noop() {}
 
     function Unipointer() {}
-    // inherit EvEmitter
-    var proto = Unipointer.prototype = Object.create(EvEmitter.prototype);
-    proto.bindStartEvent = function (elem) {
-        this._bindStartEvent(elem, true);
-    };
-    proto.unbindStartEvent = function (elem) {
-        this._bindStartEvent(elem, false);
-    };
-    /**
-     * works as unbinder, as you can ._bindStart( false ) to unbind
-     * @param {Boolean} isBind - will unbind if falsey
-     */
+    proto = Unipointer.prototype = Object.create(EvEmitter.prototype);
     proto._bindStartEvent = function (elem, isBind) {
-        // munge isBind, default to true
-        isBind = isBind === undefined ? true : !!isBind;
+        isBind = void 0 === isBind ? !0 : !!isBind;
         var bindMethod = isBind ? "addEventListener" : "removeEventListener";
-        // listen for both, for devices like Chrome Pixel
         elem[bindMethod]("mousedown", this);
         elem[bindMethod]("touchstart", this);
     };
-    // trigger handler methods for events
     proto.handleEvent = function (event) {
         var method = "on" + event.type;
-        if (this[method]) {
-            this[method](event);
-        }
+        this[method] && this[method](event);
     };
-    // returns the touch that we're keeping track of
     proto.getTouch = function (touches) {
-        for (var i = 0; i < touches.length; i++) {
-            var touch = touches[i];
-            if (touch.identifier == this.pointerIdentifier) {
-                return touch;
-            }
+        var i, touch;
+        for (i = 0; i < touches.length; i++) {
+            touch = touches[i];
+            if (touch.identifier == this.pointerIdentifier) return touch;
         }
     };
-    // ----- start event ----- //
     proto.onmousedown = function (event) {
-        // dismiss clicks from right or middle buttons
         var button = event.button;
-        if (button && (button !== 0 && button !== 1)) {
-            return;
-        }
-        this._pointerDown(event, event);
+        button && 0 !== button && 1 !== button || this._pointerDown(event, event);
     };
     proto.ontouchstart = function (event) {
         this._pointerDown(event, event.changedTouches[0]);
     };
-    /**
-     * pointer start
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     */
     proto._pointerDown = function (event, pointer) {
-        // dismiss other pointers
-        if (this.isPointerDown) {
-            return;
+        if (!this.isPointerDown) {
+            this.isPointerDown = !0;
+            this.pointerIdentifier = void 0 !== pointer.pointerId ? pointer.pointerId : pointer.identifier;
+            this.pointerDown(event, pointer);
         }
-        this.isPointerDown = true;
-        // save pointer identifier to match up touch events
-        this.pointerIdentifier = pointer.pointerId !== undefined ? // pointerId for pointer events, touch.indentifier for touch events
-            pointer.pointerId : pointer.identifier;
-        this.pointerDown(event, pointer);
     };
     proto.pointerDown = function (event, pointer) {
         this._bindPostStartEvents(event);
         this.emitEvent("pointerDown", [event, pointer]);
     };
-    // hash of events to be bound after start event
-    var postStartEvents = {
+    postStartEvents = {
         mousedown: ["mousemove", "mouseup"],
         touchstart: ["touchmove", "touchend", "touchcancel"],
         pointerdown: ["pointermove", "pointerup", "pointercancel"]
     };
     proto._bindPostStartEvents = function (event) {
-        if (!event) {
-            return;
+        if (event) {
+            var events = postStartEvents[event.type];
+            events.forEach(function (eventName) {
+                window.addEventListener(eventName, this);
+            }, this);
+            this._boundPointerEvents = events;
         }
-        // get proper events to match start event
-        var events = postStartEvents[event.type];
-        // bind events to node
-        events.forEach(function (eventName) {
-            window.addEventListener(eventName, this);
-        }, this);
-        // save these arguments
-        this._boundPointerEvents = events;
     };
     proto._unbindPostStartEvents = function () {
-        // check for _boundEvents, in case dragEnd triggered twice (old IE8 bug)
-        if (!this._boundPointerEvents) {
-            return;
+        if (this._boundPointerEvents) {
+            this._boundPointerEvents.forEach(function (eventName) {
+                window.removeEventListener(eventName, this);
+            }, this);
+            delete this._boundPointerEvents;
         }
-        this._boundPointerEvents.forEach(function (eventName) {
-            window.removeEventListener(eventName, this);
-        }, this);
-        delete this._boundPointerEvents;
     };
-    // ----- move event ----- //
     proto.onmousemove = function (event) {
         this._pointerMove(event, event);
     };
     proto.ontouchmove = function (event) {
         var touch = this.getTouch(event.changedTouches);
-        if (touch) {
-            this._pointerMove(event, touch);
-        }
+        touch && this._pointerMove(event, touch);
     };
-    /**
-     * pointer move
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     * @private
-     */
     proto._pointerMove = function (event, pointer) {
         this.pointerMove(event, pointer);
     };
-    // public
     proto.pointerMove = function (event, pointer) {
         this.emitEvent("pointerMove", [event, pointer]);
     };
-    // ----- end event ----- //
     proto.onmouseup = function (event) {
         this._pointerUp(event, event);
     };
     proto.ontouchend = function (event) {
         var touch = this.getTouch(event.changedTouches);
-        if (touch) {
-            this._pointerUp(event, touch);
-        }
+        touch && this._pointerUp(event, touch);
     };
-    /**
-     * pointer up
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     * @private
-     */
     proto._pointerUp = function (event, pointer) {
         this._pointerDone();
         this.pointerUp(event, pointer);
     };
-    // ----- pointer done ----- //
-    // triggered on pointer up & pointer cancel
     proto._pointerDone = function () {
-        // reset properties
-        this.isPointerDown = false;
+        this.isPointerDown = !1;
         delete this.pointerIdentifier;
-        // remove events
         this._unbindPostStartEvents();
         this.pointerDone();
     };
     proto.pointerDone = noop;
     proto.ontouchcancel = function (event) {
         var touch = this.getTouch(event.changedTouches);
-        if (touch) {
-            this._pointerCancel(event, touch);
-        }
+        touch && this._pointerCancel(event, touch);
     };
-    /**
-     * pointer cancel
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     * @private
-     */
     proto._pointerCancel = function (event, pointer) {
         this._pointerDone();
         this.pointerCancel(event, pointer);
     };
-    // public
     proto.pointerCancel = function (event, pointer) {
         this.emitEvent("pointerCancel", [event, pointer]);
     };
-    // -----  ----- //
-    // utility function for getting x/y coords from event
     Unipointer.getPointerPoint = function (pointer) {
         return {
             x: pointer.pageX,
             y: pointer.pageY
         };
     };
-    // -----  ----- //
     return Unipointer;
 });
-/*!
- * Unidragger v2.1.0
- * Draggable base class
- * MIT license
- */
-/*jshint browser: true, unused: true, undef: true, strict: true */
-(function (window, factory) {
-    // universal module definition
-    /*jshint strict: false */
-    // browser global
+
+! function (window, factory) {
     window.Unidragger = factory(window, window.Unipointer);
-})(window, function factory(window, Unipointer) {
-    // -----  ----- //
+}(window, function (window, Unipointer) {
+    var proto, navigator;
+
     function noop() {}
-    // -------------------------- Unidragger -------------------------- //
+
     function Unidragger() {}
-    // inherit Unipointer & EvEmitter
-    var proto = Unidragger.prototype = Object.create(Unipointer.prototype);
-    // ----- bind start ----- //
-    proto.bindHandles = function () {
-        this._bindHandles(true);
-    };
-    proto.unbindHandles = function () {
-        this._bindHandles(false);
-    };
-    var navigator = window.navigator;
-    /**
-     * works as unbinder, as you can .bindHandles( false ) to unbind
-     * @param {Boolean} isBind - will unbind if falsey
-     */
+    proto = Unidragger.prototype = Object.create(Unipointer.prototype);
+    navigator = window.navigator;
     proto._bindHandles = function (isBind) {
-        // munge isBind, default to true
-        isBind = isBind === undefined ? true : !!isBind;
-        // extra bind logic
-        var binderExtra;
-        if (navigator.pointerEnabled) {
-            binderExtra = function (handle) {
-                // disable scrolling on the element
-                handle.style.touchAction = isBind ? "none" : "";
-            };
-        } else {
-            binderExtra = noop;
-        }
-        // bind each handle
-        var bindMethod = isBind ? "addEventListener" : "removeEventListener";
-        for (var i = 0; i < this.handles.length; i++) {
-            var handle = this.handles[i];
+        var binderExtra, bindMethod, i, handle;
+        isBind = void 0 === isBind ? !0 : !!isBind;
+        binderExtra = navigator.pointerEnabled ? function (handle) {
+            handle.style.touchAction = isBind ? "none" : "";
+        } : noop;
+        bindMethod = isBind ? "addEventListener" : "removeEventListener";
+        for (i = 0; i < this.handles.length; i++) {
+            handle = this.handles[i];
             this._bindStartEvent(handle, isBind);
             binderExtra(handle);
             handle[bindMethod]("click", this);
         }
     };
-    // ----- start event ----- //
-    /**
-     * pointer start
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     */
-    // base pointer down logic
     proto._dragPointerDown = function (event, pointer) {
-        // track to see when dragging starts
         this.pointerDownPoint = Unipointer.getPointerPoint(pointer);
         var canPreventDefault = this.canPreventDefaultOnPointerDown(event, pointer);
-        if (canPreventDefault) {
-            event.preventDefault();
-        }
+        canPreventDefault && event.preventDefault();
     };
-    // overwriteable method so Flickity can prevent for scrolling
     proto.canPreventDefaultOnPointerDown = function (event) {
-        // prevent default, unless touchstart or <select>
-        return event.target.nodeName != "SELECT";
+        return "SELECT" != event.target.nodeName;
     };
-    // ----- move event ----- //
-    /**
-     * drag move
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     */
     proto.pointerMove = function (event, pointer) {
         var moveVector = this._dragPointerMove(event, pointer);
         this.emitEvent("pointerMove", [event, pointer, moveVector]);
         this._dragMove(event, pointer, moveVector);
     };
-    // base pointer move logic
     proto._dragPointerMove = function (event, pointer) {
-        var movePoint = Unipointer.getPointerPoint(pointer);
-        var moveVector = {
-            x: movePoint.x - this.pointerDownPoint.x,
-            y: movePoint.y - this.pointerDownPoint.y
-        };
-        // start drag if pointer has moved far enough to start drag
-        if (!this.isDragging && this.hasDragStarted(moveVector)) {
-            this._dragStart(event, pointer);
-        }
+        var movePoint = Unipointer.getPointerPoint(pointer),
+            moveVector = {
+                x: movePoint.x - this.pointerDownPoint.x,
+                y: movePoint.y - this.pointerDownPoint.y
+            };
+        !this.isDragging && this.hasDragStarted(moveVector) && this._dragStart(event, pointer);
         return moveVector;
     };
-    // condition if pointer has moved far enough to start drag
     proto.hasDragStarted = function (moveVector) {
         return Math.abs(moveVector.x) > 3 || Math.abs(moveVector.y) > 3;
     };
-    // ----- end event ----- //
-    /**
-     * pointer up
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     */
     proto.pointerUp = function (event, pointer) {
         this.emitEvent("pointerUp", [event, pointer]);
         this._dragPointerUp(event, pointer);
     };
     proto._dragPointerUp = function (event, pointer) {
-        if (this.isDragging) {
-            this._dragEnd(event, pointer);
-        } else {
-            // pointer didn't move enough for drag to start
-            this._staticClick(event, pointer);
-        }
+        this.isDragging ? this._dragEnd(event, pointer) : this._staticClick(event, pointer);
     };
-    // -------------------------- drag -------------------------- //
-    // dragStart
     proto._dragStart = function (event, pointer) {
-        this.isDragging = true;
+        this.isDragging = !0;
         this.dragStartPoint = Unipointer.getPointerPoint(pointer);
-        // prevent clicks
-        this.isPreventingClicks = true;
+        this.isPreventingClicks = !0;
         this.dragStart(event, pointer);
     };
     proto.dragStart = function (event, pointer) {
         this.emitEvent("dragStart", [event, pointer]);
     };
-    // dragMove
     proto._dragMove = function (event, pointer, moveVector) {
-        // do not drag if not dragging yet
-        if (!this.isDragging) {
-            return;
-        }
-        this.dragMove(event, pointer, moveVector);
+        this.isDragging && this.dragMove(event, pointer, moveVector);
     };
     proto.dragMove = function (event, pointer, moveVector) {
         event.preventDefault();
         this.emitEvent("dragMove", [event, pointer, moveVector]);
     };
-    // dragEnd
     proto._dragEnd = function (event, pointer) {
-        // set flags
-        this.isDragging = false;
-        // re-enable clicking async
+        this.isDragging = !1;
         setTimeout(function () {
             delete this.isPreventingClicks;
         }.bind(this));
@@ -1584,90 +970,66 @@ window.EvEmitter();
     proto.dragEnd = function (event, pointer) {
         this.emitEvent("dragEnd", [event, pointer]);
     };
-    // ----- onclick ----- //
-    // handle all clicks and prevent clicks when dragging
     proto.onclick = function (event) {
-        if (this.isPreventingClicks) {
-            event.preventDefault();
-        }
+        this.isPreventingClicks && event.preventDefault();
     };
-    // ----- staticClick ----- //
-    // triggered after pointer down & up with no/tiny movement
     proto._staticClick = function (event, pointer) {
-        // ignore emulated mouse up clicks
-        if (this.isIgnoringMouseUp && event.type == "mouseup") {
-            return;
-        }
-        // allow click in <input>s and <textarea>s
-        var nodeName = event.target.nodeName;
-        if (nodeName == "INPUT" || nodeName == "TEXTAREA") {
-            event.target.focus();
-        }
-        this.staticClick(event, pointer);
-        // set flag for emulated clicks 300ms after touchend
-        if (event.type != "mouseup") {
-            this.isIgnoringMouseUp = true;
-            // reset flag after 300ms
-            setTimeout(function () {
-                delete this.isIgnoringMouseUp;
-            }.bind(this), 400);
+        if (!this.isIgnoringMouseUp || "mouseup" != event.type) {
+            var nodeName = event.target.nodeName;
+            ("INPUT" == nodeName || "TEXTAREA" == nodeName) && event.target.focus();
+            this.staticClick(event, pointer);
+            if ("mouseup" != event.type) {
+                this.isIgnoringMouseUp = !0;
+                setTimeout(function () {
+                    delete this.isIgnoringMouseUp;
+                }.bind(this), 400);
+            }
         }
     };
     proto.staticClick = function (event, pointer) {
         this.emitEvent("staticClick", [event, pointer]);
     };
-    // ----- utils ----- //
     Unidragger.getPointerPoint = Unipointer.getPointerPoint;
-    // -----  ----- //
     return Unidragger;
 });
-// drag
-(function (window, factory) {
-    // universal module definition
-    /* jshint strict: false */
+
+! function (window, factory) {
     window.Flickity = factory(window, window.Flickity, window.Unidragger, window.fizzyUIUtils);
-})(window, function factory(window, Flickity, Unidragger, utils) {
-    // ----- defaults ----- //
+}(window, function (window, Flickity, Unidragger, utils) {
+    var proto, isTouch, isTouchmoveScrollCanceled, cursorNodes, clickTypes, touchStartEvents, focusNodes;
     utils.extend(Flickity.defaults, {
-        draggable: true,
+        draggable: !0,
         dragThreshold: 3
     });
-    // ----- create ----- //
     Flickity.createMethods.push("_createDrag");
-    // -------------------------- drag prototype -------------------------- //
-    var proto = Flickity.prototype;
+    proto = Flickity.prototype;
     utils.extend(proto, Unidragger.prototype);
-    // --------------------------  -------------------------- //
-    var isTouch = "createTouch" in document;
-    var isTouchmoveScrollCanceled = false;
+    isTouch = "createTouch" in document;
+    isTouchmoveScrollCanceled = !1;
     proto._createDrag = function () {
         this.on("activate", this.bindDrag);
         this.on("uiChange", this._uiChangeDrag);
         this.on("childUIPointerDown", this._childUIPointerDownDrag);
         this.on("deactivate", this.unbindDrag);
-        // HACK - add seemingly innocuous handler to fix iOS 10 scroll behavior
-        // #457, RubaXa/Sortable#973
         if (isTouch && !isTouchmoveScrollCanceled) {
             window.addEventListener("touchmove", function () {});
-            isTouchmoveScrollCanceled = true;
+            isTouchmoveScrollCanceled = !0;
         }
     };
     proto.bindDrag = function () {
-        if (!this.options.draggable || this.isDragBound) {
-            return;
+        if (this.options.draggable && !this.isDragBound) {
+            this.element.classList.add("is-draggable");
+            this.handles = [this.viewport];
+            this._bindHandles(!0);
+            this.isDragBound = !0;
         }
-        this.element.classList.add("is-draggable");
-        this.handles = [this.viewport];
-        this.bindHandles();
-        this.isDragBound = true;
     };
     proto.unbindDrag = function () {
-        if (!this.isDragBound) {
-            return;
+        if (this.isDragBound) {
+            this.element.classList.remove("is-draggable");
+            this._bindHandles(!1);
+            delete this.isDragBound;
         }
-        this.element.classList.remove("is-draggable");
-        this.unbindHandles();
-        delete this.isDragBound;
     };
     proto._uiChangeDrag = function () {
         delete this.isFreeScrolling;
@@ -1676,79 +1038,56 @@ window.EvEmitter();
         event.preventDefault();
         this.pointerDownFocus(event);
     };
-    // -------------------------- pointer events -------------------------- //
-    // nodes that have text fields
-    var cursorNodes = {
-        TEXTAREA: true,
-        INPUT: true,
-        OPTION: true
+    cursorNodes = {
+        TEXTAREA: !0,
+        INPUT: !0,
+        OPTION: !0
     };
-    // input types that do not have text fields
-    var clickTypes = {
-        radio: true,
-        checkbox: true,
-        button: true,
-        submit: true,
-        image: true,
-        file: true
+    clickTypes = {
+        radio: !0,
+        checkbox: !0,
+        button: !0,
+        submit: !0,
+        image: !0,
+        file: !0
     };
     proto.pointerDown = function (event, pointer) {
-        // dismiss inputs with text fields. #403, #404
-        var isCursorInput = cursorNodes[event.target.nodeName] && !clickTypes[event.target.type];
+        var focused, isCursorInput = cursorNodes[event.target.nodeName] && !clickTypes[event.target.type];
         if (isCursorInput) {
-            // reset pointerDown logic
-            this.isPointerDown = false;
+            this.isPointerDown = !1;
             delete this.pointerIdentifier;
-            return;
+        } else {
+            this._dragPointerDown(event, pointer);
+            focused = document.activeElement;
+            focused && focused.blur && focused != this.element && focused != document.body && focused.blur();
+            this.pointerDownFocus(event);
+            this.dragX = this.x;
+            this.viewport.classList.add("is-pointer-down");
+            this._bindPostStartEvents(event);
+            this.pointerDownScroll = getScrollPosition();
+            window.addEventListener("scroll", this);
+            this.dispatchEvent("pointerDown", event, [pointer]);
         }
-        this._dragPointerDown(event, pointer);
-        // kludge to blur focused inputs in dragger
-        var focused = document.activeElement;
-        if (focused && focused.blur && focused != this.element && // do not blur body for IE9 & 10, #117
-            focused != document.body) {
-            focused.blur();
-        }
-        this.pointerDownFocus(event);
-        // stop if it was moving
-        this.dragX = this.x;
-        this.viewport.classList.add("is-pointer-down");
-        // bind move and end events
-        this._bindPostStartEvents(event);
-        // track scrolling
-        this.pointerDownScroll = getScrollPosition();
-        window.addEventListener("scroll", this);
-        this.dispatchEvent("pointerDown", event, [pointer]);
     };
-    var touchStartEvents = {
-        touchstart: true
+    touchStartEvents = {
+        touchstart: !0
     };
-    var focusNodes = {
-        INPUT: true,
-        SELECT: true
+    focusNodes = {
+        INPUT: !0,
+        SELECT: !0
     };
     proto.pointerDownFocus = function (event) {
-        // focus element, if not touch, and its not an input or select
-        if (!this.options.accessibility || touchStartEvents[event.type] || focusNodes[event.target.nodeName]) {
-            return;
-        }
-        var prevScrollY = window.pageYOffset;
-        this.element.focus();
-        // hack to fix scroll jump after focus, #76
-        if (window.pageYOffset != prevScrollY) {
-            window.scrollTo(window.pageXOffset, prevScrollY);
+        if (this.options.accessibility && !touchStartEvents[event.type] && !focusNodes[event.target.nodeName]) {
+            var prevScrollY = window.pageYOffset;
+            this.element.focus();
+            window.pageYOffset != prevScrollY && window.scrollTo(window.pageXOffset, prevScrollY);
         }
     };
     proto.canPreventDefaultOnPointerDown = function (event) {
-        // prevent default, unless touchstart or <select>
-        var isTouchstart = event.type == "touchstart";
-        var targetNodeName = event.target.nodeName;
-        return !isTouchstart && targetNodeName != "SELECT";
+        var isTouchstart = "touchstart" == event.type,
+            targetNodeName = event.target.nodeName;
+        return !isTouchstart && "SELECT" != targetNodeName;
     };
-    // ----- move ----- //
-    proto.hasDragStarted = function (moveVector) {
-        return Math.abs(moveVector.x) > this.options.dragThreshold;
-    };
-    // ----- up ----- //
     proto.pointerUp = function (event, pointer) {
         delete this.isTouchScrolling;
         this.viewport.classList.remove("is-pointer-down");
@@ -1759,7 +1098,6 @@ window.EvEmitter();
         window.removeEventListener("scroll", this);
         delete this.pointerDownScroll;
     };
-    // -------------------------- dragging -------------------------- //
     proto.dragStart = function (event, pointer) {
         this.dragStartPosition = this.x;
         this.startAnimation();
@@ -1772,237 +1110,141 @@ window.EvEmitter();
         this._dragMove(event, pointer, moveVector);
     };
     proto.dragMove = function (event, pointer, moveVector) {
+        var direction, dragX, originBound, endBound;
         event.preventDefault();
         this.previousDragX = this.dragX;
-        // reverse if right-to-left
-        var direction = this.options.rightToLeft ? -1 : 1;
-        var dragX = this.dragStartPosition + moveVector.x * direction;
-        if (!this.options.wrapAround && this.slides.length) {
-            // slow drag
-            var originBound = Math.max(-this.slides[0].target, this.dragStartPosition);
-            dragX = dragX > originBound ? (dragX + originBound) * .5 : dragX;
-            var endBound = Math.min(-this.getLastSlide().target, this.dragStartPosition);
-            dragX = dragX < endBound ? (dragX + endBound) * .5 : dragX;
+        direction = this.options.rightToLeft ? -1 : 1;
+        dragX = this.dragStartPosition + moveVector.x * direction;
+        if (this.slides.length) {
+            originBound = Math.max(-this.slides[0].target, this.dragStartPosition);
+            dragX = dragX > originBound ? .5 * (dragX + originBound) : dragX;
+            endBound = Math.min(-this.getLastSlide().target, this.dragStartPosition);
+            dragX = endBound > dragX ? .5 * (dragX + endBound) : dragX;
         }
         this.dragX = dragX;
         this.dragMoveTime = new Date();
         this.dispatchEvent("dragMove", event, [pointer, moveVector]);
     };
     proto.dragEnd = function (event, pointer) {
+        var index, restingX;
+        index = this.dragEndRestingSelect();
         if (this.options.freeScroll) {
-            this.isFreeScrolling = true;
-        }
-        // set selectedIndex based on where flick will end up
-        var index = this.dragEndRestingSelect();
-        if (this.options.freeScroll && !this.options.wrapAround) {
-            // if free-scroll & not wrap around
-            // do not free-scroll if going outside of bounding slides
-            // so bounding slides can attract slider, and keep it in bounds
-            var restingX = this.getRestingPosition();
+            restingX = this.getRestingPosition();
             this.isFreeScrolling = -restingX > this.slides[0].target && -restingX < this.getLastSlide().target;
-        } else if (!this.options.freeScroll && index == this.selectedIndex) {
-            // boost selection if selected index has not changed
-            index += this.dragEndBoostSelect();
-        }
+        } else this.options.freeScroll || index != this.selectedIndex || (index += this.dragEndBoostSelect());
         delete this.previousDragX;
-        // apply selection
-        // TODO refactor this, selecting here feels weird
-        // HACK, set flag so dragging stays in correct direction
-        this.isDragSelect = this.options.wrapAround;
         this.select(index);
-        delete this.isDragSelect;
         this.dispatchEvent("dragEnd", event, [pointer]);
     };
     proto.dragEndRestingSelect = function () {
-        var restingX = this.getRestingPosition();
-        // how far away from selected slide
-        var distance = Math.abs(this.getSlideDistance(-restingX, this.selectedIndex));
-        // get closet resting going up and going down
-        var positiveResting = this._getClosestResting(restingX, distance, 1);
-        var negativeResting = this._getClosestResting(restingX, distance, -1);
-        // use closer resting for wrap-around
-        var index = positiveResting.distance < negativeResting.distance ? positiveResting.index : negativeResting.index;
+        var restingX = this.getRestingPosition(),
+            distance = Math.abs(this.getSlideDistance(-restingX, this.selectedIndex)),
+            positiveResting = this._getClosestResting(restingX, distance, 1),
+            negativeResting = this._getClosestResting(restingX, distance, -1),
+            index = positiveResting.distance < negativeResting.distance ? positiveResting.index : negativeResting.index;
         return index;
     };
-    /**
-     * given resting X and distance to selected cell
-     * get the distance and index of the closest cell
-     * @param {Number} restingX - estimated post-flick resting position
-     * @param {Number} distance - distance to selected cell
-     * @param {Integer} increment - +1 or -1, going up or down
-     * @returns {Object} - { distance: {Number}, index: {Integer} }
-     */
     proto._getClosestResting = function (restingX, distance, increment) {
-        var index = this.selectedIndex;
-        var minDistance = Infinity;
-        var condition = this.options.contain && !this.options.wrapAround ? // if contain, keep going if distance is equal to minDistance
-            function (d, md) {
-                return d <= md;
+        for (var index = this.selectedIndex, minDistance = 1 / 0, condition = this.options.contain ? function (d, md) {
+                return md >= d;
             } : function (d, md) {
-                return d < md;
-            };
-        while (condition(distance, minDistance)) {
-            // measure distance to next cell
+                return md > d;
+            }; condition(distance, minDistance);) {
             index += increment;
             minDistance = distance;
             distance = this.getSlideDistance(-restingX, index);
-            if (distance === null) {
-                break;
-            }
+            if (null === distance) break;
             distance = Math.abs(distance);
         }
         return {
             distance: minDistance,
-            // selected was previous index
             index: index - increment
         };
     };
-    /**
-     * measure distance between x and a slide target
-     * @param {Number} x
-     * @param {Integer} index - slide index
-     */
     proto.getSlideDistance = function (x, index) {
-        var len = this.slides.length;
-        // wrap around if at least 2 slides
-        var isWrapAround = this.options.wrapAround && len > 1;
-        var slideIndex = isWrapAround ? ((index % len + len) % len) : index;
-        var slide = this.slides[slideIndex];
-        if (!slide) {
-            return null;
-        }
-        // add distance for wrap-around slides
-        var wrap = isWrapAround ? this.slideableWidth * Math.floor(index / len) : 0;
-        return x - (slide.target + wrap);
+        slide = this.slides[index];
+        if (!slide) return null;
+        return x - (slide.target);
     };
     proto.dragEndBoostSelect = function () {
-        // do not boost if no previousDragX or dragMoveTime
-        if (this.previousDragX === undefined || !this.dragMoveTime || // or if drag was held for 100 ms
-            new Date() - this.dragMoveTime > 100) {
-            return 0;
-        }
-        var distance = this.getSlideDistance(-this.dragX, this.selectedIndex);
-        var delta = this.previousDragX - this.dragX;
-        if (distance > 0 && delta > 0) {
-            // boost to next if moving towards the right, and positive velocity
-            return 1;
-        } else if (distance < 0 && delta < 0) {
-            // boost to previous if moving towards the left, and negative velocity
-            return -1;
-        }
-        return 0;
+        var distance, delta;
+        if (void 0 === this.previousDragX || !this.dragMoveTime || new Date() - this.dragMoveTime > 100) return 0;
+        distance = this.getSlideDistance(-this.dragX, this.selectedIndex);
+        delta = this.previousDragX - this.dragX;
+        return distance > 0 && delta > 0 ? 1 : 0 > distance && 0 > delta ? -1 : 0;
     };
-    // ----- staticClick ----- //
     proto.staticClick = function (event, pointer) {
-        // get clickedCell, if cell was clicked
-        var clickedCell = this.getParentCell(event.target);
-        var cellElem = clickedCell && clickedCell.element;
-        var cellIndex = clickedCell && this.cells.indexOf(clickedCell);
+        var clickedCell = this.getParentCell(event.target),
+            cellElem = clickedCell && clickedCell.element,
+            cellIndex = clickedCell && this.cells.indexOf(clickedCell);
         this.dispatchEvent("staticClick", event, [pointer, cellElem, cellIndex]);
     };
-    // ----- scroll ----- //
     proto.onscroll = function () {
-        var scroll = getScrollPosition();
-        var scrollMoveX = this.pointerDownScroll.x - scroll.x;
-        var scrollMoveY = this.pointerDownScroll.y - scroll.y;
-        // cancel click/tap if scroll is too much
-        if (Math.abs(scrollMoveX) > 3 || Math.abs(scrollMoveY) > 3) {
-            this._pointerDone();
-        }
+        var scroll = getScrollPosition(),
+            scrollMoveX = this.pointerDownScroll.x - scroll.x,
+            scrollMoveY = this.pointerDownScroll.y - scroll.y;
+        (Math.abs(scrollMoveX) > 3 || Math.abs(scrollMoveY) > 3) && this._pointerDone();
     };
-    // ----- utils ----- //
+
     function getScrollPosition() {
         return {
             x: window.pageXOffset,
             y: window.pageYOffset
         };
     }
-    // -----  ----- //
     return Flickity;
 });
-/*!
- * Tap listener v2.0.0
- * listens to taps
- * MIT license
- */
-/*jshint browser: true, unused: true, undef: true, strict: true */
-(function (window, factory) {
-    // universal module definition
-    /*jshint strict: false*/
-    /*globals define, module, require */
-    // browser global
+
+! function (window, factory) {
     window.TapListener = factory(window, window.Unipointer);
-})(window, function factory(window, Unipointer) {
-    // --------------------------  TapListener -------------------------- //
+}(window, function (window, Unipointer) {
     function TapListener(elem) {
         this.bindTap(elem);
     }
-    // inherit Unipointer & EventEmitter
     var proto = TapListener.prototype = Object.create(Unipointer.prototype);
-    /**
-     * bind tap event to element
-     * @param {Element} elem
-     */
     proto.bindTap = function (elem) {
-        if (!elem) {
-            return;
+        if (elem) {
+            this.unbindTap();
+            this.tapElement = elem;
+            this._bindStartEvent(elem, !0);
         }
-        this.unbindTap();
-        this.tapElement = elem;
-        this._bindStartEvent(elem, true);
     };
     proto.unbindTap = function () {
-        if (!this.tapElement) {
-            return;
+        if (this.tapElement) {
+            this._bindStartEvent(this.tapElement, !0);
+            delete this.tapElement;
         }
-        this._bindStartEvent(this.tapElement, true);
-        delete this.tapElement;
     };
-    /**
-     * pointer up
-     * @param {Event} event
-     * @param {Event or Touch} pointer
-     */
     proto.pointerUp = function (event, pointer) {
-        // ignore emulated mouse up clicks
-        if (this.isIgnoringMouseUp && event.type == "mouseup") {
-            return;
-        }
-        var pointerPoint = Unipointer.getPointerPoint(pointer);
-        var boundingRect = this.tapElement.getBoundingClientRect();
-        var scrollX = window.pageXOffset;
-        var scrollY = window.pageYOffset;
-        // calculate if pointer is inside tapElement
-        var isInside = pointerPoint.x >= boundingRect.left + scrollX && pointerPoint.x <= boundingRect.right + scrollX && pointerPoint.y >= boundingRect.top + scrollY && pointerPoint.y <= boundingRect.bottom + scrollY;
-        // trigger callback if pointer is inside element
-        if (isInside) {
-            this.emitEvent("tap", [event, pointer]);
-        }
-        // set flag for emulated clicks 300ms after touchend
-        if (event.type != "mouseup") {
-            this.isIgnoringMouseUp = true;
-            // reset flag after 300ms
-            var _this = this;
-            setTimeout(function () {
-                delete _this.isIgnoringMouseUp;
-            }, 400);
+        var pointerPoint, boundingRect, scrollX, scrollY, isInside, _this;
+        if (!this.isIgnoringMouseUp || "mouseup" != event.type) {
+            pointerPoint = Unipointer.getPointerPoint(pointer);
+            boundingRect = this.tapElement.getBoundingClientRect();
+            scrollX = window.pageXOffset;
+            scrollY = window.pageYOffset;
+            isInside = !(pointerPoint.x < boundingRect.left + scrollX || pointerPoint.x > boundingRect.right + scrollX || pointerPoint.y < boundingRect.top + scrollY || pointerPoint.y > boundingRect.bottom + scrollY);
+            isInside && this.emitEvent("tap", [event, pointer]);
+            if ("mouseup" != event.type) {
+                this.isIgnoringMouseUp = !0;
+                _this = this;
+                setTimeout(function () {
+                    delete _this.isIgnoringMouseUp;
+                }, 400);
+            }
         }
     };
     proto.destroy = function () {
         this.pointerDone();
         this.unbindTap();
     };
-    // -----  ----- //
     return TapListener;
 });
-// prev/next buttons
-(function (window, factory) {
-    // universal module definition
-    /* jshint strict: false */
+
+! function (window, factory) {
     factory(window, window.Flickity, window.TapListener, window.fizzyUIUtils);
-})(window, function factory(window, Flickity, TapListener, utils) {
+}(window, function (window, Flickity, TapListener, utils) {
     "use strict";
-    // -------------------------- PrevNextButton -------------------------- //
+
     function PrevNextButton(direction, parent) {
         this.direction = direction;
         this.parent = parent;
@@ -2010,97 +1252,75 @@ window.EvEmitter();
     }
     PrevNextButton.prototype = new TapListener();
     PrevNextButton.prototype._create = function () {
-        // properties
-        this.isEnabled = true;
-        this.isPrevious = this.direction == -1;
+        this.isEnabled = !0;
+        this.isPrevious = -1 == this.direction;
         var element = this.element = document.createElement("button");
         element.className = "flickity-prev-next-button";
         element.className += this.isPrevious ? " previous" : " next";
-        // prevent button from submitting form http://stackoverflow.com/a/10836076/182183
         element.setAttribute("type", "button");
-        // init as disabled
         this.disable();
         element.setAttribute("aria-label", this.isPrevious ? "previous" : "next");
-        // events
         this.on("tap", this.onTap);
         this.parent.on("select", this.update.bind(this));
         this.on("pointerDown", this.parent.childUIPointerDown.bind(this.parent));
     };
     PrevNextButton.prototype.activate = function () {
         this.bindTap(this.element);
-        // click events from keyboard
         this.element.addEventListener("click", this);
-        // add to DOM
         this.parent.element.appendChild(this.element);
     };
     PrevNextButton.prototype.deactivate = function () {
-        // remove from DOM
         this.parent.element.removeChild(this.element);
-        // do regular TapListener destroy
         TapListener.prototype.destroy.call(this);
-        // click events from keyboard
         this.element.removeEventListener("click", this);
     };
     PrevNextButton.prototype.onTap = function () {
-        if (!this.isEnabled) {
-            return;
+        if (this.isEnabled) {
+            this.parent.emitEvent("uiChange");
+            var method = this.isPrevious ? "previous" : "next";
+            this.parent[method]();
         }
-        this.parent.emitEvent("uiChange");
-        var method = this.isPrevious ? "previous" : "next";
-        this.parent[method]();
     };
     PrevNextButton.prototype.handleEvent = utils.handleEvent;
     PrevNextButton.prototype.onclick = function () {
-        // only allow clicks from keyboard
         var focused = document.activeElement;
-        if (focused && focused == this.element) {
-            this.onTap();
-        }
+        focused && focused == this.element && this.onTap();
     };
-    // -----  ----- //
     PrevNextButton.prototype.enable = function () {
-        if (this.isEnabled) {
-            return;
+        if (!this.isEnabled) {
+            this.element.disabled = !1;
+            this.isEnabled = !0;
         }
-        this.element.disabled = false;
-        this.isEnabled = true;
     };
     PrevNextButton.prototype.disable = function () {
-        if (!this.isEnabled) {
-            return;
+        if (this.isEnabled) {
+            this.element.disabled = !0;
+            this.isEnabled = !1;
         }
-        this.element.disabled = true;
-        this.isEnabled = false;
     };
     PrevNextButton.prototype.update = function () {
-        // index of first or last slide, if previous or next
-        var slides = this.parent.slides;
-        // enable is wrapAround and at least 2 slides
-        if (this.parent.options.wrapAround && slides.length > 1) {
-            this.enable();
-            return;
-        }
-        var lastIndex = slides.length ? slides.length - 1 : 0;
-        var boundIndex = this.isPrevious ? 0 : lastIndex;
-        var method = this.parent.selectedIndex == boundIndex ? "disable" : "enable";
+        var lastIndex, boundIndex, method, slides = this.parent.slides;
+
+        lastIndex = slides.length ? slides.length - 1 : 0;
+        boundIndex = this.isPrevious ? 0 : lastIndex;
+        method = this.parent.selectedIndex == boundIndex ? "disable" : "enable";
         this[method]();
+
     };
     PrevNextButton.prototype.destroy = function () {
         this.deactivate();
     };
-    // -------------------------- Flickity prototype -------------------------- //
     utils.extend(Flickity.defaults, {
-        prevNextButtons: true
+        prevNextButtons: !0
     });
     Flickity.createMethods.push("_createPrevNextButtons");
     var proto = Flickity.prototype;
     proto._createPrevNextButtons = function () {
-        if (!this.options.prevNextButtons) {
-            return;
+        if (this.options.prevNextButtons) {
+            this.prevButton = new PrevNextButton(-1, this);
+            this.nextButton = new PrevNextButton(1, this);
+            this.on("activate", this.activatePrevNextButtons);
         }
-        this.prevButton = new PrevNextButton(-1, this);
-        this.nextButton = new PrevNextButton(1, this);
-        this.on("activate", this.activatePrevNextButtons);
     };
     proto.activatePrevNextButtons = function () {
         this.prevButton.activate();
@@ -2112,78 +1332,60 @@ window.EvEmitter();
         this.nextButton.deactivate();
         this.off("deactivate", this.deactivatePrevNextButtons);
     };
-    // --------------------------  -------------------------- //
     Flickity.PrevNextButton = PrevNextButton;
     return Flickity;
 });
-/*!
- * Flickity asNavFor v2.0.1
- * enable asNavFor for Flickity
- */
-/*jshint browser: true, undef: true, unused: true, strict: true*/
-(function (window, factory) {
-    // universal module definition
-    /*jshint strict: false */
-    /*globals define, module, require */
+
+! function (window, factory) {
     window.Flickity = factory(window.Flickity, window.fizzyUIUtils);
-})(window, function factory(Flickity, utils) {
-    // -------------------------- asNavFor prototype -------------------------- //
-    // Flickity.defaults.asNavFor = null;
+}(window, function (Flickity, utils) {
     Flickity.createMethods.push("_createAsNavFor");
     var proto = Flickity.prototype;
     proto._createAsNavFor = function () {
-        this.on("activate", this.activateAsNavFor);
-        this.on("deactivate", this.deactivateAsNavFor);
+        var asNavForOption, _this;
+        this.on("activate", this.navCompanionSelect(!0));
+        this.on("deactivate", this.removeNavSelectedElements());
         this.on("destroy", this.destroyAsNavFor);
-        var asNavForOption = this.options.asNavFor;
-        if (!asNavForOption) {
-            return;
+        asNavForOption = this.options.asNavFor;
+        if (asNavForOption) {
+            _this = this;
+            setTimeout(function () {
+                _this.setNavCompanion(asNavForOption);
+            });
         }
-        // HACK do async, give time for other flickity to be initalized
-        var _this = this;
-        setTimeout(function initNavCompanion() {
-            _this.setNavCompanion(asNavForOption);
-        });
     };
     proto.setNavCompanion = function (elem) {
+        var companion, _this;
         elem = utils.getQueryElement(elem);
-        var companion = Flickity.data(elem);
-        // stop if no companion or companion is self
-        if (!companion || companion == this) {
-            return;
+        companion = Flickity.data(elem);
+        if (companion && companion != this) {
+            this.navCompanion = companion;
+            _this = this;
+            this.onNavCompanionSelect = function () {
+                _this.navCompanionSelect();
+            };
+            companion.on("select", this.onNavCompanionSelect);
+            this.on("staticClick", this.onNavStaticClick);
+            this.navCompanionSelect(!0);
         }
-        this.navCompanion = companion;
-        // companion select
-        var _this = this;
-        this.onNavCompanionSelect = function () {
-            _this.navCompanionSelect();
-        };
-        companion.on("select", this.onNavCompanionSelect);
-        // click
-        this.on("staticClick", this.onNavStaticClick);
-        this.navCompanionSelect(true);
     };
-    proto.navCompanionSelect = function (isInstant) {
-        if (!this.navCompanion) {
-            return;
+    proto.navCompanionSelect = function () {
+        var selectedCell, firstIndex, lastIndex, selectIndex, selectedCells;
+        if (this.navCompanion) {
+            selectedCell = this.navCompanion.selectedCells[0];
+            firstIndex = this.navCompanion.cells.indexOf(selectedCell);
+            lastIndex = firstIndex + this.navCompanion.selectedCells.length - 1;
+            selectIndex = Math.floor(lerp(firstIndex, lastIndex, this.navCompanion.cellAlign));
+            this.selectCell(selectIndex, !1);
+            this.removeNavSelectedElements();
+            if (selectIndex < this.cells.length) {
+                selectedCells = this.cells.slice(firstIndex, lastIndex + 1);
+                this.navSelectedElements = selectedCells.map(function (cell) {
+                    return cell.element;
+                });
+                this.changeNavSelectedClass("add");
+            }
         }
-        // select slide that matches first cell of slide
-        var selectedCell = this.navCompanion.selectedCells[0];
-        var firstIndex = this.navCompanion.cells.indexOf(selectedCell);
-        var lastIndex = firstIndex + this.navCompanion.selectedCells.length - 1;
-        var selectIndex = Math.floor(lerp(firstIndex, lastIndex, this.navCompanion.cellAlign));
-        this.selectCell(selectIndex, false, isInstant);
-        // set nav selected class
-        this.removeNavSelectedElements();
-        // stop if companion has more cells than this one
-        if (selectIndex >= this.cells.length) {
-            return;
-        }
-        var selectedCells = this.cells.slice(firstIndex, lastIndex + 1);
-        this.navSelectedElements = selectedCells.map(function (cell) {
-            return cell.element;
-        });
-        this.changeNavSelectedClass("add");
     };
 
     function lerp(a, b, t) {
@@ -2194,32 +1396,21 @@ window.EvEmitter();
             navElem.classList[method]("is-nav-selected");
         });
     };
-    proto.activateAsNavFor = function () {
-        this.navCompanionSelect(true);
-    };
     proto.removeNavSelectedElements = function () {
-        if (!this.navSelectedElements) {
-            return;
+        if (this.navSelectedElements) {
+            this.changeNavSelectedClass("remove");
+            delete this.navSelectedElements;
         }
-        this.changeNavSelectedClass("remove");
-        delete this.navSelectedElements;
     };
     proto.onNavStaticClick = function (event, pointer, cellElement, cellIndex) {
-        if (typeof cellIndex == "number") {
-            this.navCompanion.selectCell(cellIndex);
-        }
-    };
-    proto.deactivateAsNavFor = function () {
-        this.removeNavSelectedElements();
+        "number" == typeof cellIndex && this.navCompanion.selectCell(cellIndex);
     };
     proto.destroyAsNavFor = function () {
-        if (!this.navCompanion) {
-            return;
+        if (this.navCompanion) {
+            this.navCompanion.off("select", this.onNavCompanionSelect);
+            this.off("staticClick", this.onNavStaticClick);
+            delete this.navCompanion;
         }
-        this.navCompanion.off("select", this.onNavCompanionSelect);
-        this.off("staticClick", this.onNavStaticClick);
-        delete this.navCompanion;
     };
-    // -----  ----- //
     return Flickity;
 });
