@@ -243,9 +243,6 @@ var baseUtils = (function () {
     proto.select = function () {
         this.changeSelectedClass("add");
     };
-    proto.unselect = function () {
-        this.changeSelectedClass("remove");
-    };
     proto.changeSelectedClass = function (method) {
         this.cells.forEach(function (cell) {
             cell.element.classList[method]("is-selected");
@@ -639,7 +636,9 @@ var baseUtils = (function () {
     proto.updateSelectedSlide = function () {
         var slide = this.slides[this.selectedIndex];
         if (slide) {
-            this.unselectSelectedSlide();
+            this.cells.forEach(function (cell) {
+            cell.element.classList["remove"]("is-selected");
+            });
             this.selectedSlide = slide;
             slide.select();
             this.selectedCells = slide.cells;
@@ -713,32 +712,6 @@ var baseUtils = (function () {
             this.emitEvent("uiChange");
             this[rightMethod]();
         }
-    };
-    proto.deactivate = function () {
-        if (this.isActive) {
-            this.element.classList.remove("flickity-enabled");
-            this.element.classList.remove("flickity-rtl");
-            this.cells.forEach(function (cell) {
-                cell.destroy();
-            });
-            this.unselectSelectedSlide();
-            this.element.removeChild(this.viewport);
-            moveElements(this.slider.children, this.element);
-            if (this.options.accessibility) {
-                this.element.removeAttribute("tabIndex");
-                this.element.removeEventListener("keydown", this);
-            }
-            this.isActive = !1;
-            this.emitEvent("deactivate");
-        }
-    };
-    proto.destroy = function () {
-        this.deactivate();
-        window.removeEventListener("resize", this);
-        this.emitEvent("destroy");
-        jQuery && this.$element && jQuery.removeData(this.element, "flickity");
-        delete this.element.flickityGUID;
-        delete instances[this.guid];
     };
     utils.extend(proto, animatePrototype);
     Flickity.data = function (elem) {
@@ -896,9 +869,6 @@ var baseUtils = (function () {
         this.pointerDownPoint = Unipointer.getPointerPoint(pointer);
         var canPreventDefault = this.canPreventDefaultOnPointerDown(event, pointer);
         canPreventDefault && event.preventDefault();
-    };
-    proto.canPreventDefaultOnPointerDown = function (event) {
-        return "SELECT" != event.target.nodeName;
     };
     proto.pointerMove = function (event, pointer) {
         var moveVector = this._dragPointerMove(event, pointer);
@@ -1064,9 +1034,7 @@ var baseUtils = (function () {
         }
     };
     proto.canPreventDefaultOnPointerDown = function (event) {
-        var isTouchstart = "touchstart" == event.type,
-            targetNodeName = event.target.nodeName;
-        return !isTouchstart && "SELECT" != targetNodeName;
+        return ("touchstart" != event.type) && ("SELECT" != event.target.nodeName);
     };
     proto.pointerUp = function (event, pointer) {
         delete this.isTouchScrolling;
@@ -1324,8 +1292,6 @@ var baseUtils = (function () {
     proto._createAsNavFor = function () {
         var asNavForOption, _this;
         this.on("activate", this.navCompanionSelect(!0));
-        this.on("deactivate", this.removeNavSelectedElements());
-        this.on("destroy", this.destroyAsNavFor);
         asNavForOption = this.options.asNavFor;
         if (asNavForOption) {
             _this = this;
@@ -1384,13 +1350,6 @@ var baseUtils = (function () {
     };
     proto.onNavStaticClick = function (event, pointer, cellElement, cellIndex) {
         "number" == typeof cellIndex && this.navCompanion.selectCell(cellIndex);
-    };
-    proto.destroyAsNavFor = function () {
-        if (this.navCompanion) {
-            this.navCompanion.off("select", this.onNavCompanionSelect);
-            this.off("staticClick", this.onNavStaticClick);
-            delete this.navCompanion;
-        }
     };
     return Flickity;
 });
