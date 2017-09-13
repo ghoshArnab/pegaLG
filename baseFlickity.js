@@ -572,7 +572,7 @@ window.fizzyUIUtils = factory(
 // Flickity.Cell
 (function(window, factory) {
     // universal module definition
- 
+        window.Flickity = window.Flickity || {};
         window.Flickity.Cell = factory(
             window,
             window.getSize
